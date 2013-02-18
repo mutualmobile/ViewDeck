@@ -193,49 +193,13 @@ static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocit
 
 @end
 
-@interface UIViewController (UIViewDeckController_ViewContainmentEmulation) 
-
-- (void)addChildViewController:(UIViewController *)childController;
-- (void)removeFromParentViewController;
-- (void)willMoveToParentViewController:(UIViewController *)parent;
-- (void)didMoveToParentViewController:(UIViewController *)parent;
-
-@end
-
-
 @implementation IIViewDeckController
 
-@synthesize panningMode = _panningMode;
-@synthesize panners = _panners;
-@synthesize referenceView = _referenceView;
-@synthesize slidingController = _slidingController;
-@synthesize centerController = _centerController;
+//find out wtf is going on with these dynamics
 @dynamic leftController;
 @dynamic rightController;
 @dynamic topController;
 @dynamic bottomController;
-@synthesize resizesCenterView = _resizesCenterView;
-@synthesize originalShadowOpacity = _originalShadowOpacity;
-@synthesize originalShadowPath = _originalShadowPath;
-@synthesize originalShadowRadius = _originalShadowRadius;
-@synthesize originalShadowColor = _originalShadowColor;
-@synthesize originalShadowOffset = _originalShadowOffset;
-@synthesize delegate = _delegate;
-@synthesize delegateMode = _delegateMode;
-@synthesize navigationControllerBehavior = _navigationControllerBehavior;
-@synthesize panningView = _panningView; 
-@synthesize centerhiddenInteractivity = _centerhiddenInteractivity;
-@synthesize centerTapper = _centerTapper;
-@synthesize centerView = _centerView;
-@synthesize sizeMode = _sizeMode;
-@synthesize enabled = _enabled;
-@synthesize elastic = _elastic;
-@synthesize automaticallyUpdateTabBarItems = _automaticallyUpdateTabBarItems;
-@synthesize panningGestureDelegate = _panningGestureDelegate;
-@synthesize bounceDurationFactor = _bounceDurationFactor;
-@synthesize bounceOpenSideDurationFactor = _bounceOpenSideDurationFactor;
-@synthesize openSlideAnimationDuration = _openSlideAnimationDuration;
-@synthesize closeSlideAnimationDuration = _closeSlideAnimationDuration;
 
 #pragma mark - Initalisation and deallocation
 
@@ -343,9 +307,6 @@ static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocit
     }
     return self;
 }
-
-
-
 
 - (void)cleanup {
     self.originalShadowRadius = 0;
@@ -2925,29 +2886,5 @@ static const char* viewDeckControllerKey = "ViewDeckController";
     UIViewController* controller = self.viewDeckController_core ? self.viewDeckController_core : self;
     return [controller vdc_navigationItem]; // when we get here, the vdc_ method is actually the old, real method
 }
-
-
-@end
-
-@implementation UIViewController (UIViewDeckController_ViewContainmentEmulation_Fakes) 
-
-- (void)vdc_addChildViewController:(UIViewController *)childController {
-    // intentionally empty
-}
-
-- (void)vdc_removeFromParentViewController {
-    // intentionally empty
-}
-
-- (void)vdc_willMoveToParentViewController:(UIViewController *)parent {
-    // intentionally empty
-}
-
-- (void)vdc_didMoveToParentViewController:(UIViewController *)parent {
-    // intentionally empty
-}
-
-
-
 
 @end
