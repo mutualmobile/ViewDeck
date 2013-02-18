@@ -105,45 +105,45 @@ extern IIViewDeckOffsetOrientation IIViewDeckOffsetOrientationFromIIViewDeckSide
 typedef void (^IIViewDeckControllerBlock) (IIViewDeckController *controller, BOOL success);
 typedef void (^IIViewDeckControllerBounceBlock) (IIViewDeckController *controller);
 
-@property (nonatomic, assign) id<IIViewDeckControllerDelegate> delegate;
-@property (nonatomic, assign) IIViewDeckDelegateMode delegateMode;
+@property (nonatomic, weak) id<IIViewDeckControllerDelegate> delegate;
+@property (nonatomic) IIViewDeckDelegateMode delegateMode;
 
-@property (nonatomic, readonly, retain) NSArray* controllers;
-@property (nonatomic, retain) UIViewController* centerController;
-@property (nonatomic, retain) UIViewController* leftController;
-@property (nonatomic, retain) UIViewController* rightController;
-@property (nonatomic, retain) UIViewController* topController;
-@property (nonatomic, retain) UIViewController* bottomController;
-@property (nonatomic, readonly, assign) UIViewController* slidingController;
+@property (nonatomic, readonly, strong) NSArray* controllers;
+@property (nonatomic, strong) UIViewController* centerController;
+@property (nonatomic, strong) UIViewController* leftController;
+@property (nonatomic, strong) UIViewController* rightController;
+@property (nonatomic, strong) UIViewController* topController;
+@property (nonatomic, strong) UIViewController* bottomController;
+@property (nonatomic, readonly, weak) UIViewController* slidingController;
 
-@property (nonatomic, retain) UIView* panningView;
-@property (nonatomic, assign) id<UIGestureRecognizerDelegate> panningGestureDelegate;
-@property (nonatomic, assign, getter=isEnabled) BOOL enabled;
-@property (nonatomic, assign, getter=isElastic) BOOL elastic;
+@property (nonatomic, strong) UIView* panningView;
+@property (nonatomic, weak) id<UIGestureRecognizerDelegate> panningGestureDelegate;
+@property (nonatomic, getter=isEnabled) BOOL enabled;
+@property (nonatomic, getter=isElastic) BOOL elastic;
 
-@property (nonatomic, assign) CGFloat leftSize;
-@property (nonatomic, assign, readonly) CGFloat leftViewSize;
-@property (nonatomic, assign, readonly) CGFloat leftLedgeSize;
-@property (nonatomic, assign) CGFloat rightSize;
-@property (nonatomic, assign, readonly) CGFloat rightViewSize;
-@property (nonatomic, assign, readonly) CGFloat rightLedgeSize;
-@property (nonatomic, assign) CGFloat topSize;
-@property (nonatomic, assign, readonly) CGFloat topViewSize;
-@property (nonatomic, assign, readonly) CGFloat topLedgeSize;
-@property (nonatomic, assign) CGFloat bottomSize;
-@property (nonatomic, assign, readonly) CGFloat bottomViewSize;
-@property (nonatomic, assign, readonly) CGFloat bottomLedgeSize;
-@property (nonatomic, assign) CGFloat maxSize;
-@property (nonatomic, assign) BOOL resizesCenterView;
-@property (nonatomic, assign) IIViewDeckPanningMode panningMode;
-@property (nonatomic, assign) IIViewDeckCenterHiddenInteractivity centerhiddenInteractivity;
-@property (nonatomic, assign) IIViewDeckNavigationControllerBehavior navigationControllerBehavior;
-@property (nonatomic, assign) BOOL automaticallyUpdateTabBarItems;
-@property (nonatomic, assign) IIViewDeckSizeMode sizeMode;
-@property (nonatomic, assign) CGFloat bounceDurationFactor; // capped between 0.01 and 0.99. defaults to 0.3. Set to 0 to have the old 1.4 behavior (equal time for long part and short part of bounce)
-@property (nonatomic, assign) CGFloat bounceOpenSideDurationFactor; // Same as bounceDurationFactor, but if set, will give independent control of the bounce as the side opens fully (first half of the bounce)
-@property (nonatomic, assign) CGFloat openSlideAnimationDuration;
-@property (nonatomic, assign) CGFloat closeSlideAnimationDuration;
+@property (nonatomic) CGFloat leftSize;
+@property (nonatomic, readonly) CGFloat leftViewSize;
+@property (nonatomic, readonly) CGFloat leftLedgeSize;
+@property (nonatomic) CGFloat rightSize;
+@property (nonatomic, readonly) CGFloat rightViewSize;
+@property (nonatomic, readonly) CGFloat rightLedgeSize;
+@property (nonatomic) CGFloat topSize;
+@property (nonatomic, readonly) CGFloat topViewSize;
+@property (nonatomic, readonly) CGFloat topLedgeSize;
+@property (nonatomic) CGFloat bottomSize;
+@property (nonatomic, readonly) CGFloat bottomViewSize;
+@property (nonatomic, readonly) CGFloat bottomLedgeSize;
+@property (nonatomic) CGFloat maxSize;
+@property (nonatomic) BOOL resizesCenterView;
+@property (nonatomic) IIViewDeckPanningMode panningMode;
+@property (nonatomic) IIViewDeckCenterHiddenInteractivity centerhiddenInteractivity;
+@property (nonatomic) IIViewDeckNavigationControllerBehavior navigationControllerBehavior;
+@property (nonatomic) BOOL automaticallyUpdateTabBarItems;
+@property (nonatomic) IIViewDeckSizeMode sizeMode;
+@property (nonatomic) CGFloat bounceDurationFactor; // capped between 0.01 and 0.99. defaults to 0.3. Set to 0 to have the old 1.4 behavior (equal time for long part and short part of bounce)
+@property (nonatomic) CGFloat bounceOpenSideDurationFactor; // Same as bounceDurationFactor, but if set, will give independent control of the bounce as the side opens fully (first half of the bounce)
+@property (nonatomic) CGFloat openSlideAnimationDuration;
+@property (nonatomic) CGFloat closeSlideAnimationDuration;
 
 - (id)initWithCenterViewController:(UIViewController*)centerController;
 - (id)initWithCenterViewController:(UIViewController*)centerController leftViewController:(UIViewController*)leftController;

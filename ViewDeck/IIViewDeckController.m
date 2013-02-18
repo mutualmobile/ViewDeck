@@ -31,20 +31,6 @@
 #define __has_extension __has_feature // Compatibility with pre-3.0 compilers.
 #endif
 
-#if __has_feature(objc_arc) && __clang_major__ >= 3
-#define II_ARC_ENABLED 1
-#endif // __has_feature(objc_arc)
-
-#if II_ARC_ENABLED
-#define II_RETAIN(xx)  ((void)(0))
-#define II_RELEASE(xx)  ((void)(0))
-#define II_AUTORELEASE(xx)  (xx)
-#else
-#define II_RETAIN(xx)           [xx retain]
-#define II_RELEASE(xx)          [xx release]
-#define II_AUTORELEASE(xx)      [xx autorelease]
-#endif
-
 #define II_FLOAT_EQUAL(x, y) (((x) - (y)) == 0.0f)
 #define II_STRING_EQUAL(a, b) ((a == nil && b == nil) || (a != nil && [a isEqualToString:b]))
 
@@ -148,19 +134,19 @@ static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocit
 
 @interface IIViewDeckController () <UIGestureRecognizerDelegate>
 
-@property (nonatomic, retain) UIView* referenceView;
+@property (nonatomic, strong) UIView* referenceView;
 @property (nonatomic, readonly) CGRect referenceBounds;
 @property (nonatomic, readonly) CGRect centerViewBounds;
 @property (nonatomic, readonly) CGRect sideViewBounds;
-@property (nonatomic, retain) NSMutableArray* panners;
-@property (nonatomic, assign) CGFloat originalShadowRadius;
-@property (nonatomic, assign) CGFloat originalShadowOpacity;
-@property (nonatomic, retain) UIColor* originalShadowColor;
-@property (nonatomic, assign) CGSize originalShadowOffset;
-@property (nonatomic, retain) UIBezierPath* originalShadowPath;
-@property (nonatomic, retain) UIButton* centerTapper;
-@property (nonatomic, retain) UIView* centerView;
-@property (nonatomic, readonly) UIView* slidingControllerView;
+@property (nonatomic, strong) NSMutableArray* panners;
+@property (nonatomic) CGFloat originalShadowRadius;
+@property (nonatomic) CGFloat originalShadowOpacity;
+@property (nonatomic, strong) UIColor* originalShadowColor;
+@property (nonatomic) CGSize originalShadowOffset;
+@property (nonatomic, strong) UIBezierPath* originalShadowPath;
+@property (nonatomic, strong) UIButton* centerTapper;
+@property (nonatomic, strong) UIView* centerView;
+@property (nonatomic, weak, readonly) UIView* slidingControllerView;
 
 - (void)cleanup;
 
@@ -387,16 +373,10 @@ static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocit
     [self cleanup];
     
     self.centerController.viewDeckController = nil;
-    self.centerController = nil;
     self.leftController.viewDeckController = nil;
     self.leftController = nil;
     self.rightController.viewDeckController = nil;
     self.rightController = nil;
-    self.panners = nil;
-    
-#if !II_ARC_ENABLED
-    [super dealloc];
-#endif
 }
 
 #pragma mark - Memory management
@@ -746,7 +726,7 @@ static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocit
     _offset = 0;
     _viewFirstAppeared = NO;
     _viewAppeared = 0;
-    self.view = II_AUTORELEASE([[UIView alloc] init]);
+    self.view = [[UIView alloc] init];
     self.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     self.view.autoresizesSubviews = YES;
     self.view.clipsToBounds = YES;
@@ -755,7 +735,7 @@ static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocit
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    self.centerView = II_AUTORELEASE([[UIView alloc] init]);
+    self.centerView = [[UIView alloc] init];
     self.centerView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     self.centerView.autoresizesSubviews = YES;
     self.centerView.clipsToBounds = YES;
@@ -2361,7 +2341,7 @@ static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocit
 - (void)addPanner:(UIView*)view {
     if (!view) return;
     
-    UIPanGestureRecognizer* panner = II_AUTORELEASE([[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panned:)]);
+    UIPanGestureRecognizer* panner = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panned:)];
     panner.cancelsTouchesInView = YES;
     panner.delegate = self;
     [view addGestureRecognizer:panner];
@@ -2565,9 +2545,7 @@ static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocit
 
 - (void)setPanningView:(UIView *)panningView {
     if (_panningView != panningView) {
-        II_RELEASE(_panningView);
         _panningView = panningView;
-        II_RETAIN(_panningView);
         
         if (_viewFirstAppeared && _panningMode == IIViewDeckPanningViewPanning)
             [self addPanners];
@@ -2628,9 +2606,7 @@ static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocit
     
     // make the switch
     if (prevController != controller) {
-        II_RELEASE(prevController);
         _controllers[side] = controller;
-        II_RETAIN(controller);
     }
     
     if (controller) {
@@ -2745,7 +2721,6 @@ static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocit
 
         
         [_centerController didMoveToParentViewController:nil];
-        II_RELEASE(_centerController);
     }
     
     // make the switch
@@ -2753,7 +2728,6 @@ static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocit
     
     if (_centerController) {
         // and finish the transition
-        II_RETAIN(_centerController);
         [self addChildViewController:_centerController];
         [_centerController setViewDeckController:self];
         [_centerController addObserver:self forKeyPath:@"title" options:0 context:nil];
@@ -2965,57 +2939,6 @@ static const char* viewDeckControllerKey = "ViewDeckController";
 - (UINavigationItem*)vdc_navigationItem {
     UIViewController* controller = self.viewDeckController_core ? self.viewDeckController_core : self;
     return [controller vdc_navigationItem]; // when we get here, the vdc_ method is actually the old, real method
-}
-
-+ (void)vdc_swizzle {
-    SEL presentModal = @selector(presentModalViewController:animated:);
-    SEL vdcPresentModal = @selector(vdc_presentModalViewController:animated:);
-    method_exchangeImplementations(class_getInstanceMethod(self, presentModal), class_getInstanceMethod(self, vdcPresentModal));
-    
-    SEL presentVC = @selector(presentViewController:animated:completion:);
-    SEL vdcPresentVC = @selector(vdc_presentViewController:animated:completion:);
-    method_exchangeImplementations(class_getInstanceMethod(self, presentVC), class_getInstanceMethod(self, vdcPresentVC));
-    
-    SEL nc = @selector(navigationController);
-    SEL vdcnc = @selector(vdc_navigationController);
-    method_exchangeImplementations(class_getInstanceMethod(self, nc), class_getInstanceMethod(self, vdcnc));
-    
-    SEL ni = @selector(navigationItem);
-    SEL vdcni = @selector(vdc_navigationItem);
-    method_exchangeImplementations(class_getInstanceMethod(self, ni), class_getInstanceMethod(self, vdcni));
-    
-    // view containment drop ins for <ios5
-    SEL willMoveToPVC = @selector(willMoveToParentViewController:);
-    SEL vdcWillMoveToPVC = @selector(vdc_willMoveToParentViewController:);
-    if (!class_getInstanceMethod(self, willMoveToPVC)) {
-        Method implementation = class_getInstanceMethod(self, vdcWillMoveToPVC);
-        class_addMethod([UIViewController class], willMoveToPVC, method_getImplementation(implementation), "v@:@"); 
-    }
-    
-    SEL didMoveToPVC = @selector(didMoveToParentViewController:);
-    SEL vdcDidMoveToPVC = @selector(vdc_didMoveToParentViewController:);
-    if (!class_getInstanceMethod(self, didMoveToPVC)) {
-        Method implementation = class_getInstanceMethod(self, vdcDidMoveToPVC);
-        class_addMethod([UIViewController class], didMoveToPVC, method_getImplementation(implementation), "v@:"); 
-    }
-    
-    SEL removeFromPVC = @selector(removeFromParentViewController);
-    SEL vdcRemoveFromPVC = @selector(vdc_removeFromParentViewController);
-    if (!class_getInstanceMethod(self, removeFromPVC)) {
-        Method implementation = class_getInstanceMethod(self, vdcRemoveFromPVC);
-        class_addMethod([UIViewController class], removeFromPVC, method_getImplementation(implementation), "v@:"); 
-    }
-    
-    SEL addCVC = @selector(addChildViewController:);
-    SEL vdcAddCVC = @selector(vdc_addChildViewController:);
-    if (!class_getInstanceMethod(self, addCVC)) {
-        Method implementation = class_getInstanceMethod(self, vdcAddCVC);
-        class_addMethod([UIViewController class], addCVC, method_getImplementation(implementation), "v@:@"); 
-    }
-}
-
-+ (void)load {
-    [self vdc_swizzle];
 }
 
 

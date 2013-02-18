@@ -27,7 +27,7 @@
 
 @interface IIWrapController : UIViewController
 
-@property (nonatomic, readonly, retain) UIViewController* wrappedController;
+@property (nonatomic, readonly, strong) UIViewController* wrappedController;
 @property (nonatomic, copy) void(^onViewDidLoad)(IIWrapController* controller);
 @property (nonatomic, copy) void(^onViewWillAppear)(IIWrapController* controller, BOOL animated);
 @property (nonatomic, copy) void(^onViewDidAppear)(IIWrapController* controller, BOOL animated);
