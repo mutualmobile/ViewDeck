@@ -94,19 +94,19 @@
 }
 
 - (void)previewBounceLeftView {
-    [self.viewDeckController previewBounceView:IIViewDeckLeftSide];
+    [self.viewDeckController previewBounceView:IIViewDeckSideLeft];
 }
 
 - (void)previewBounceRightView {
-    [self.viewDeckController previewBounceView:IIViewDeckRightSide];
+    [self.viewDeckController previewBounceView:IIViewDeckSideRight];
 }
 
 - (void)previewBounceTopView {
-    [self.viewDeckController previewBounceView:IIViewDeckTopSide];
+    [self.viewDeckController previewBounceView:IIViewDeckSideTop];
 }
 
 - (void)previewBounceBottomView {
-    [self.viewDeckController previewBounceView:IIViewDeckBottomSide];
+    [self.viewDeckController previewBounceView:IIViewDeckSideBottom];
 }
 
 - (void)showCam:(id)sender {
