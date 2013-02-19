@@ -32,16 +32,16 @@
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     if (self.level == 1) {
-        [[UIApplication sharedApplication] setStatusBarHidden:YES withAnimation:UIStatusBarAnimationNone];
+        [[UIApplication sharedApplication] setStatusBarHidden:YES withAnimation:UIStatusBarAnimationSlide];
         self.viewDeckController.view.frame = [[UIScreen mainScreen] applicationFrame];
         [self.viewDeckController.view setNeedsDisplay]; // .frame = self.viewDeckController.view.bounds;
     }
 }
 
-- (void)viewDidDisappear:(BOOL)animated {
-    [super viewDidDisappear:animated];
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
     if (self.level == 1) {
-        [[UIApplication sharedApplication] setStatusBarHidden:NO withAnimation:UIStatusBarAnimationNone];
+        [[UIApplication sharedApplication] setStatusBarHidden:NO withAnimation:UIStatusBarAnimationSlide];
         self.viewDeckController.view.frame = [[UIScreen mainScreen] applicationFrame];
         [self.viewDeckController.view setNeedsDisplay]; // .frame = self.viewDeckController.view.bounds;
     }

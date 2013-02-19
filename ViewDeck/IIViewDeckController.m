@@ -80,6 +80,15 @@ typedef NS_ENUM(NSInteger, IIViewDeckViewState){
     IIViewDeckViewStateVisible
 };
 
+CGFloat const kIIViewDeckDefaultDuration = 0.0f;
+CGFloat const kIIViewDeckDefaultBounceDurationFactor = 0.3f;
+CGFloat const kIIViewDeckDefaultOpenSlideAnimationDuration = 0.3f;
+CGFloat const kIIViewDeckDefaultCloseSlideAnimationDuration = 0.3f;
+CGFloat const kIIViewDeckDefaultLedgeWidth = 44.f;
+UIViewAnimationOptions const kIIViewDeckDefaultSwipeAnimationCurve = UIViewAnimationOptionCurveEaseOut;
+
+typedef void(^IIViewDeckAppearanceBlock)(UIViewController* controller);
+
 inline NSString* NSStringFromIIViewDeckSide(IIViewDeckSide side) {
     switch (side) {
         case IIViewDeckSideLeft:
@@ -117,17 +126,13 @@ inline IIViewDeckOffsetOrientation IIViewDeckOffsetOrientationFromIIViewDeckSide
     }
 }
 
-static const UIViewAnimationOptions DefaultSwipedAnimationCurve = UIViewAnimationOptionCurveEaseOut;
-
-static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocity)
+static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocity)
 {
     NSTimeInterval animationDuration = pointsToAnimate / fabsf(velocity);
     // adjust duration for easing curve, if necessary
-    if (DefaultSwipedAnimationCurve != UIViewAnimationOptionCurveLinear) animationDuration *= 1.25;
+    if (kIIViewDeckDefaultSwipeAnimationCurve != UIViewAnimationOptionCurveLinear) animationDuration *= 1.25;
     return animationDuration;
 }
-
-#define DEFAULT_DURATION 0.0
 
 @interface IIViewDeckController () <UIGestureRecognizerDelegate>
 
@@ -201,7 +206,7 @@ static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocit
 
 @implementation IIViewDeckController
 
-//find out wtf is going on with these dynamics
+#warning find out wtf is going on with these dynamics
 @dynamic leftController;
 @dynamic rightController;
 @dynamic topController;
@@ -227,35 +232,18 @@ static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocit
         _navigationControllerBehavior = IIViewDeckNavigationControllerBehaviorContained;
         _centerhiddenInteractivity = IIViewDeckCenterHiddenInteractionFull;
         _sizeMode = IIViewDeckSizeModeLedge;
-        _viewAppeared = 0;
-        _viewFirstAppeared = NO;
-        _resizesCenterView = NO;
-        _automaticallyUpdateTabBarItems = NO;
         self.panners = [NSMutableArray array];
         self.enabled = YES;
-        _offset = 0;
-        _bounceDurationFactor = 0.3;
-        _openSlideAnimationDuration = 0.3;
-        _closeSlideAnimationDuration = 0.3;
+        _bounceDurationFactor = kIIViewDeckDefaultBounceDurationFactor;
+        _openSlideAnimationDuration = kIIViewDeckDefaultOpenSlideAnimationDuration;
+        _closeSlideAnimationDuration = kIIViewDeckDefaultCloseSlideAnimationDuration;
         _offsetOrientation = IIViewDeckOrientationHorizontal;
         
-        _delegate = nil;
         _delegateMode = IIViewDeckDelegateModeDelegateOnly;
         
-        self.originalShadowRadius = 0;
-        self.originalShadowOffset = CGSizeZero;
-        self.originalShadowColor = nil;
-        self.originalShadowOpacity = 0;
-        self.originalShadowPath = nil;
-        
-        _slidingController = nil;
         self.centerController = centerController;
-        self.leftController = nil;
-        self.rightController = nil;
-        self.topController = nil;
-        self.bottomController = nil;
         
-        _ledge[IIViewDeckSideLeft] = _ledge[IIViewDeckSideRight] = _ledge[IIViewDeckSideTop] = _ledge[IIViewDeckSideBottom] = 44;
+        _ledge[IIViewDeckSideLeft] = _ledge[IIViewDeckSideRight] = _ledge[IIViewDeckSideTop] = _ledge[IIViewDeckSideBottom] = kIIViewDeckDefaultLedgeWidth;
     }
     return self;
 }
@@ -477,7 +465,7 @@ static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocit
     self.bottomController.view.hidden = CGRectGetMaxY(self.slidingControllerView.frame) >= self.referenceBounds.size.height;
 }
 
-#pragma mark - ledges
+#pragma mark - Ledges
 
 - (void)setSize:(CGFloat)size forSide:(IIViewDeckSide)side completion:(void(^)(BOOL finished))completion {
     // we store ledge sizes internally but allow size to be specified depending on size mode.
@@ -537,7 +525,7 @@ static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocit
     return [self ledgeAsSize:_ledge[side] forSide:side];
 }
 
-#pragma mark left size
+#pragma mark Left size
 
 - (void)setLeftSize:(CGFloat)leftSize {
     [self setLeftSize:leftSize completion:nil];
@@ -559,7 +547,7 @@ static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocit
     return [self ledgeAsSize:_ledge[IIViewDeckSideLeft] mode:IIViewDeckSizeModeLedge forSide:IIViewDeckSideLeft];
 }
 
-#pragma mark right size
+#pragma mark Right size
 
 - (void)setRightSize:(CGFloat)rightSize {
     [self setRightSize:rightSize completion:nil];
@@ -582,7 +570,7 @@ static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocit
 }
 
 
-#pragma mark top size
+#pragma mark Top size
 
 - (void)setTopSize:(CGFloat)leftSize {
     [self setTopSize:leftSize completion:nil];
@@ -628,7 +616,7 @@ static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocit
 }
 
 
-#pragma mark max size
+#pragma mark Max size
 
 - (void)setMaxSize:(CGFloat)maxSize {
     [self setMaxSize:maxSize completion:nil];
@@ -1300,7 +1288,7 @@ static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocit
           completion:(IIViewDeckControllerBlock)completed {
     return [self openSideView:side
                      animated:animated
-                     duration:DEFAULT_DURATION
+                     duration:kIIViewDeckDefaultDuration
                    completion:completed];
 }
 
@@ -1326,13 +1314,16 @@ static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocit
                                  completion:completed];
     }
     
-    if (duration == DEFAULT_DURATION) duration = [self openSlideDuration:animated];
+    if (duration == kIIViewDeckDefaultDuration) duration = [self openSlideDuration:animated];
     
+    //we may be modifying these options below
     __block UIViewAnimationOptions options = UIViewAnimationOptionCurveEaseOut | UIViewAnimationOptionLayoutSubviews | UIViewAnimationOptionBeginFromCurrentState;
     
     IIViewDeckControllerBlock finish = ^(IIViewDeckController *controller, BOOL success) {
-        if (!success) {
-            if (completed) completed(self, NO);
+        if (success == NO) {
+            if (completed != nil) {
+                completed(self, NO);
+            }
             return;
         }
         
@@ -1452,7 +1443,7 @@ static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocit
            completion:(IIViewDeckControllerBlock)completed {
     return [self closeSideView:side
                       animated:animated
-                      duration:DEFAULT_DURATION
+                      duration:kIIViewDeckDefaultDuration
                     completion:completed];
 }
 
@@ -1475,7 +1466,7 @@ static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocit
         return NO;
     }
     
-    if (duration == DEFAULT_DURATION){
+    if (duration == kIIViewDeckDefaultDuration){
         duration = [self closeSlideDuration:animated];
     }
     
@@ -1657,7 +1648,7 @@ static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocit
 - (BOOL)closeLeftViewAnimated:(BOOL)animated
                    completion:(IIViewDeckControllerBlock)completed {
     return [self closeLeftViewAnimated:animated
-                              duration:DEFAULT_DURATION
+                              duration:kIIViewDeckDefaultDuration
                             completion:completed];
 }
 
@@ -1748,7 +1739,7 @@ static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocit
 - (BOOL)closeRightViewAnimated:(BOOL)animated
                     completion:(IIViewDeckControllerBlock)completed {
     return [self closeRightViewAnimated:animated
-                               duration:DEFAULT_DURATION
+                               duration:kIIViewDeckDefaultDuration
                              completion:completed];
 }
 
@@ -1881,7 +1872,7 @@ static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocit
 - (BOOL)closeTopViewAnimated:(BOOL)animated
                   completion:(IIViewDeckControllerBlock)completed {
     return [self closeTopViewAnimated:animated
-                             duration:DEFAULT_DURATION
+                             duration:kIIViewDeckDefaultDuration
                            completion:completed];
 }
 
@@ -1973,7 +1964,7 @@ static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocit
 - (BOOL)closeBottomViewAnimated:(BOOL)animated
                      completion:(IIViewDeckControllerBlock)completed {
     return [self closeBottomViewAnimated:animated
-                                duration:DEFAULT_DURATION
+                                duration:kIIViewDeckDefaultDuration
                               completion:completed];
 }
 
@@ -2278,7 +2269,7 @@ static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocit
 - (BOOL)closeOpenViewAnimated:(BOOL)animated
                    completion:(IIViewDeckControllerBlock)completed {
     return [self closeOpenViewAnimated:animated
-                              duration:DEFAULT_DURATION
+                              duration:kIIViewDeckDefaultDuration
                             completion:completed];
 }
 
@@ -3020,27 +3011,40 @@ static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocit
     }];
     
     //empty initial implementations
-    void(^beforeBlock)() = ^{};
-    void(^afterBlock)(UIViewController* controller) = ^(UIViewController* controller){};
-    
+    void(^beforeBlock)() = nil;
+    IIViewDeckAppearanceBlock afterBlock = nil;
+#warning fix this method
     if (_viewFirstAppeared) {
         beforeBlock = ^{
-            [self notifyAppearanceForSide:side animated:NO from:2 to:1];
+            [self notifyAppearanceForSide:side
+                                 animated:NO
+                                     from:IIViewDeckViewStateVisible
+                                       to:IIViewDeckViewStateInTransition];
             [[self controllerForSide:side].view removeFromSuperview];
-            [self notifyAppearanceForSide:side animated:NO from:1 to:0];
+            [self notifyAppearanceForSide:side
+                                 animated:NO
+                                     from:IIViewDeckViewStateInTransition
+                                       to:IIViewDeckViewStateHidden];
         };
         afterBlock = ^(UIViewController* controller) {
-            [self notifyAppearanceForSide:side animated:NO from:0 to:1];
+            [self notifyAppearanceForSide:side
+                                 animated:NO
+                                     from:IIViewDeckViewStateHidden
+                                       to:IIViewDeckViewStateInTransition];
             [self hideAppropriateSideViews];
             controller.view.frame = self.referenceBounds;
             controller.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
             if (self.slidingController){
-                [self.referenceView insertSubview:controller.view belowSubview:self.slidingControllerView];
+                [self.referenceView insertSubview:controller.view
+                                     belowSubview:self.slidingControllerView];
             }
             else{
                 [self.referenceView addSubview:controller.view];
             }
-            [self notifyAppearanceForSide:side animated:NO from:1 to:2];
+            [self notifyAppearanceForSide:side
+                                 animated:NO
+                                     from:IIViewDeckViewStateInTransition
+                                       to:IIViewDeckViewStateVisible];
         };
     }
     
@@ -3050,7 +3054,9 @@ static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocit
         if (controller == self.centerController){
             self.centerController = nil;
         }
-        beforeBlock();
+        if(beforeBlock != nil){
+            beforeBlock();
+        }
         if (currentSide != IIViewDeckSideNone){
             _controllers[currentSide] = nil;
         }
@@ -3073,7 +3079,11 @@ static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocit
         
         [parentController addChildViewController:controller];
         [controller setViewDeckController:self];
-        afterBlock(controller);
+        
+        if (afterBlock != nil) {
+            afterBlock(controller);
+        }
+        
         [controller didMoveToParentViewController:parentController];
     }
 }
@@ -3112,12 +3122,12 @@ static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocit
 
 
 - (void)setCenterController:(UIViewController *)centerController {
-    if (_centerController == centerController) {
+    if ([_centerController isEqual:centerController]) {
         return;
     }
     
-    void(^beforeBlock)(UIViewController* controller) = ^(UIViewController* controller){};
-    void(^afterBlock)(UIViewController* controller) = ^(UIViewController* controller){};
+    IIViewDeckAppearanceBlock afterBlock = nil;
+    IIViewDeckAppearanceBlock beforeBlock = nil;
     
     __block CGRect currentFrame = self.referenceBounds;
     if (_viewFirstAppeared) {
@@ -3161,11 +3171,16 @@ static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocit
     if (_centerController) {
         currentFrame = _centerController.view.frame;
         [_centerController willMoveToParentViewController:nil];
-        if (centerController == self.leftController) self.leftController = nil;
-        if (centerController == self.rightController) self.rightController = nil;
-        if (centerController == self.topController) self.topController = nil;
-        if (centerController == self.bottomController) self.bottomController = nil;
-        beforeBlock(_centerController);
+        
+        if ([centerController isEqual:self.leftController]) self.leftController = nil;
+        if ([centerController isEqual:self.rightController]) self.rightController = nil;
+        if ([centerController isEqual:self.topController]) self.topController = nil;
+        if ([centerController isEqual:self.bottomController]) self.bottomController = nil;
+        
+        if(beforeBlock != nil){
+            beforeBlock(_centerController);
+        }
+        
         @try {
             [_centerController removeObserver:self forKeyPath:@"title"];
             if (self.automaticallyUpdateTabBarItems) {
@@ -3175,10 +3190,10 @@ static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocit
             }
         }
         @catch (NSException *exception) {}
+        
         [_centerController setViewDeckController:nil];
+        
         [_centerController removeFromParentViewController];
-        
-        
         [_centerController didMoveToParentViewController:nil];
     }
     
@@ -3200,13 +3215,15 @@ static NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat velocit
             self.hidesBottomBarWhenPushed = _centerController.hidesBottomBarWhenPushed;
         }
         
-        afterBlock(_centerController);
+        if (afterBlock != nil) {
+            afterBlock(_centerController);
+        }
+        
         [_centerController didMoveToParentViewController:self];
         
         if ([self isAnySideOpen]) {
             [self centerViewHidden];
         }
-        
     }
 }
 
@@ -3433,6 +3450,50 @@ static const char* viewDeckControllerKey = "ViewDeckController";
 
 + (void)load {
     [self vdc_swizzle];
+    
+#ifdef DEBUG
+    [self swizzleLifecycleLogging];
+#endif
 }
+
++ (void)swizzleLifecycleLogging{
+    SEL viewWillAppear = @selector(viewWillAppear:);
+    SEL viewDidAppear = @selector(viewDidAppear:);
+    SEL viewWillDisappear = @selector(viewWillDisappear:);
+    SEL viewDidDisappear = @selector(viewDidDisappear:);
+    
+    SEL test_viewWillAppear = @selector(test_viewWillAppear:);
+    SEL test_viewDidAppear = @selector(test_viewDidAppear:);
+    SEL test_viewWillDisappear = @selector(test_viewWillDisappear:);
+    SEL test_viewDidDisappear = @selector(test_viewDidDisappear:);
+    
+    method_exchangeImplementations(class_getInstanceMethod(self, viewWillAppear), class_getInstanceMethod(self, test_viewWillAppear));
+    method_exchangeImplementations(class_getInstanceMethod(self, viewDidAppear), class_getInstanceMethod(self, test_viewDidAppear));
+    method_exchangeImplementations(class_getInstanceMethod(self, viewWillDisappear), class_getInstanceMethod(self, test_viewWillDisappear));
+    method_exchangeImplementations(class_getInstanceMethod(self, viewDidDisappear), class_getInstanceMethod(self, test_viewDidDisappear));
+}
+
+#define LOG_METHOD NSLog(@"%@<%p> %@", self.class, self, NSStringFromSelector(_cmd))
+
+- (void)test_viewWillAppear:(BOOL)animated{
+    [self test_viewWillAppear:animated];
+    LOG_METHOD;
+}
+
+- (void)test_viewDidAppear:(BOOL)animated{
+    [self test_viewDidAppear:animated];
+    LOG_METHOD;
+}
+
+- (void)test_viewWillDisappear:(BOOL)animated{
+    [self test_viewWillDisappear:animated];
+    LOG_METHOD;
+}
+
+- (void)test_viewDidDisappear:(BOOL)animated{
+    [self test_viewDidDisappear:animated];
+    LOG_METHOD;
+}
+
 
 @end
