@@ -183,6 +183,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
 - (void)notifyWillCloseSide:(IIViewDeckSide)viewDeckSide animated:(BOOL)animated;
 - (void)notifyDidCloseSide:(IIViewDeckSide)viewDeckSide animated:(BOOL)animated;
 - (void)notifyDidChangeOffset:(CGFloat)offset orientation:(IIViewDeckOffsetOrientation)orientation panning:(BOOL)panning;
+- (void)notifyWillChangeOffset:(CGFloat)offset orientation:(IIViewDeckOffsetOrientation)orientation panning:(BOOL)panning;
 
 - (BOOL)checkDelegate:(SEL)selector side:(IIViewDeckSide)viewDeckSize;
 - (void)performDelegate:(SEL)selector side:(IIViewDeckSide)viewDeckSize animated:(BOOL)animated;
@@ -1099,6 +1100,22 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     }
 }
 
+- (void)notifyClosingAnimationSide:(IIViewDeckSide)viewDeckSide
+                          animated:(BOOL)animated {
+    if (viewDeckSide == IIViewDeckSideNone) return;
+
+    [self notifyAppearanceForSide:viewDeckSide
+                         animated:animated
+                             from:IIViewDeckViewStateVisible
+                               to:IIViewDeckViewStateInTransition];
+
+    if (![self isSideClosed:viewDeckSide]) {
+        [self performDelegate:@selector(viewDeckController:closingAnimationViewSide:animated:)
+                         side:viewDeckSide
+                     animated:animated];
+    }
+}
+
 - (void)notifyDidCloseSide:(IIViewDeckSide)viewDeckSide
                   animated:(BOOL)animated {
     if (viewDeckSide == IIViewDeckSideNone) return;
@@ -1122,6 +1139,15 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
                   orientation:(IIViewDeckOffsetOrientation)orientation
                       panning:(BOOL)panning {
     [self performDelegate:@selector(viewDeckController:didChangeOffset:orientation:panning:)
+                   offset:offset
+              orientation:orientation
+                  panning:panning];
+}
+
+- (void)notifyWillChangeOffset:(CGFloat)offset
+                   orientation:(IIViewDeckOffsetOrientation)orientation
+                       panning:(BOOL)panning {
+    [self performDelegate:@selector(viewDeckController:willChangeOffset:orientation:panning:)
                    offset:offset
               orientation:orientation
                   panning:panning];
@@ -1331,15 +1357,23 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
         
         [self notifyWillOpenSide:side
                         animated:animated];
+
+        CGFloat offset = [self ledgeOffsetForSide:side];
+        IIViewDeckOffsetOrientation orientation =
+        IIViewDeckOffsetOrientationFromIIViewDeckSide(side);
+
         [UIView
          animateWithDuration:duration
          delay:0
          options:options
          animations:^{
+
+             [self notifyWillChangeOffset:offset orientation:orientation panning:NO];
+
              UIViewController *sideViewController = [self controllerForSide:side];
              sideViewController.view.hidden = NO;
-             [self setSlidingFrameForOffset:[self ledgeOffsetForSide:side]
-                             forOrientation:IIViewDeckOffsetOrientationFromIIViewDeckSide(side)];
+             [self setSlidingFrameForOffset:offset
+                             forOrientation:orientation];
              [self centerViewHidden];
          } completion:^(BOOL finished) {
              if (completed){ completed(self, YES); }
@@ -1484,6 +1518,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
      delay:0
      options:options
      animations:^{
+         [self notifyClosingAnimationSide:side animated:animated];
          [self setSlidingFrameForOffset:0
                          forOrientation:IIViewDeckOffsetOrientationFromIIViewDeckSide(side)];
          [self centerViewVisible];
