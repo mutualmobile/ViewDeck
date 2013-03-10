@@ -2416,7 +2416,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
         }
         [self.centerView addSubview:self.centerTapper];
         self.centerTapper.frame = [self.centerView bounds];
-        
+        self.centerTapper.accessibilityLabel = self.centerTapperAccessibilityLabel;
         [self addPanners];
     }
     

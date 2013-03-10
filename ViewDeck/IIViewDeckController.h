@@ -106,6 +106,7 @@ typedef void (^IIViewDeckControllerBounceBlock) (IIViewDeckController *controlle
 @property (nonatomic, strong) UIViewController* rightController;
 @property (nonatomic, strong) UIViewController* topController;
 @property (nonatomic, strong) UIViewController* bottomController;
+@property (nonatomic, copy) NSString *centerTapperAccessibilityLabel;
 @property (nonatomic, readonly, weak) UIViewController* slidingController;
 
 @property (nonatomic, strong) UIView* panningView;
