@@ -2480,6 +2480,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
             self.centerTapper.backgroundColor = [UIColor clearColor];
         }
         [self.centerController.view addSubview:self.centerTapper];
+        self.centerTapper.accessibilityLabel = self.centerTapperAccessibilityLabel;
         
         CGRect tapperFrame = self.centerView.bounds;
         
