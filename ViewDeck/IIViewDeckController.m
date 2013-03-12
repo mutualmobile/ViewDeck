@@ -3263,7 +3263,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     [self.centerView insertSubview:newCenterController.view belowSubview:self.centerController.view];
     newCenterController.view.frame = self.referenceBounds;
     
-    [self prepareCenterForNewController:newCenterController shouldModifyViewHeirarchy:NO];
+    [self prepareCenterForNewController:newCenterController shouldModifyViewHierarchy:NO];
     [self.centerController viewWillDisappear:YES];
     [self restoreShadowToSlidingView];
     [self removePanners];
@@ -3287,13 +3287,13 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
                                       0,
                                       self.centerView.frame.size.width,
                                       self.centerView.frame.size.height);
-         [self configureNewCenterControllerWithFrame:finalFrame modifyViewHeirarchy:NO];
+         [self configureNewCenterControllerWithFrame:finalFrame modifyViewHierarchy:NO];
          
          [newCenterController didMoveToParentViewController:self];
      }];
 }
 
-- (void)prepareCenterForNewController:(UIViewController *)centerController shouldModifyViewHeirarchy:(BOOL)shouldModifyHeirarchy{
+- (void)prepareCenterForNewController:(UIViewController *)centerController shouldModifyViewHierarchy:(BOOL)shouldModifyHierarchy{
     [_centerController willMoveToParentViewController:nil];
     
     //clean up ivars
@@ -3303,13 +3303,13 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     if ([centerController isEqual:self.bottomController]) self.bottomController = nil;
     
     if (_viewFirstAppeared) {
-        if (shouldModifyHeirarchy) {
+        if (shouldModifyHierarchy) {
             [_centerController viewWillDisappear:NO];
         }
         [self restoreShadowToSlidingView];
         [self removePanners];
         
-        if (shouldModifyHeirarchy) {
+        if (shouldModifyHierarchy) {
             [_centerController.view removeFromSuperview];
             [_centerController viewDidDisappear:NO];
             [self.centerView removeFromSuperview];
@@ -3327,7 +3327,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     [_centerController setViewDeckController:nil];
 }
 
-- (void)configureNewCenterControllerWithFrame:(CGRect)currentFrame modifyViewHeirarchy:(BOOL)modifyHeirarchy{
+- (void)configureNewCenterControllerWithFrame:(CGRect)currentFrame modifyViewHierarchy:(BOOL)modifyHierarchy{
     [_centerController setViewDeckController:self];
     [_centerController addObserver:self forKeyPath:@"title" options:0 context:nil];
     self.title = _centerController.title;
@@ -3337,7 +3337,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     }
     
     if (_viewFirstAppeared) {
-        if (modifyHeirarchy) {
+        if (modifyHierarchy) {
             [self.view addSubview:self.centerView];
             [_centerController viewWillAppear:NO];
         }
@@ -3358,7 +3358,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
         _centerController.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
         _centerController.view.hidden = NO;
         
-        if (modifyHeirarchy) {
+        if (modifyHierarchy) {
             [self.centerView addSubview:_centerController.view];
         }
         
@@ -3369,7 +3369,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
         [self addPanners];
         [self applyShadowToSlidingViewAnimated:NO];
         
-        if (modifyHeirarchy) {
+        if (modifyHierarchy) {
             [_centerController viewDidAppear:NO];
         }
     }
@@ -3385,7 +3385,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     // start the transition
     if (_centerController) {
         currentFrame = _centerController.view.frame;
-        [self prepareCenterForNewController:centerController shouldModifyViewHeirarchy:YES];
+        [self prepareCenterForNewController:centerController shouldModifyViewHierarchy:YES];
         
         [_centerController removeFromParentViewController];
         [_centerController didMoveToParentViewController:nil];
@@ -3397,7 +3397,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     if (_centerController) {
         // and finish the transition
         [self addChildViewController:_centerController];
-        [self configureNewCenterControllerWithFrame:currentFrame modifyViewHeirarchy:YES];
+        [self configureNewCenterControllerWithFrame:currentFrame modifyViewHierarchy:YES];
         
         [_centerController didMoveToParentViewController:self];
         
