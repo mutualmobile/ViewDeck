@@ -86,6 +86,7 @@ CGFloat const kIIViewDeckDefaultOpenSlideAnimationDuration = 0.2f;
 CGFloat const kIIViewDeckDefaultCloseSlideAnimationDuration = 0.3f;
 CGFloat const kIIViewDeckDefaultLedgeWidth = 44.f;
 UIViewAnimationOptions const kIIViewDeckDefaultSwipeAnimationCurve = UIViewAnimationOptionCurveEaseOut;
+CGFloat const kIIViewDeckDefaultScootAnimationDuration = 0.5f;
 
 typedef void(^IIViewDeckAppearanceBlock)(UIViewController* controller);
 
@@ -139,7 +140,10 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
 {
     NSTimeInterval animationDuration = pointsToAnimate / fabsf(velocity);
     // adjust duration for easing curve, if necessary
-    if (kIIViewDeckDefaultSwipeAnimationCurve != UIViewAnimationOptionCurveLinear) animationDuration *= 1.25;
+    if (kIIViewDeckDefaultSwipeAnimationCurve != UIViewAnimationOptionCurveLinear){
+        animationDuration *= 1.25;
+    }
+    
     return animationDuration;
 }
 
@@ -192,7 +196,6 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
 - (void)notifyWillCloseSide:(IIViewDeckSide)viewDeckSide animated:(BOOL)animated;
 - (void)notifyDidCloseSide:(IIViewDeckSide)viewDeckSide animated:(BOOL)animated;
 - (void)notifyDidChangeOffset:(CGFloat)offset orientation:(IIViewDeckOffsetOrientation)orientation panning:(BOOL)panning;
-- (void)notifyWillChangeOffset:(CGFloat)offset orientation:(IIViewDeckOffsetOrientation)orientation panning:(BOOL)panning;
 
 - (BOOL)checkDelegate:(SEL)selector side:(IIViewDeckSide)viewDeckSize;
 - (void)performDelegate:(SEL)selector side:(IIViewDeckSide)viewDeckSize animated:(BOOL)animated;
@@ -361,47 +364,68 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
 }
 
 - (CGRect)referenceBounds {
-    return self.referenceView
-    ? self.referenceView.bounds
-    : [[UIScreen mainScreen] bounds];
+    if (self.referenceView != nil){
+        return self.referenceView.bounds;
+    }
+    else{
+        return [[UIScreen mainScreen] bounds];
+    }
 }
 
 - (CGFloat)relativeStatusBarHeight {
-    if (![self.referenceView isKindOfClass:[UIWindow class]])
+    if ([self.referenceView isKindOfClass:[UIWindow class]] == NO){
         return 0;
+    }
     
     return [self statusBarHeight];
 }
 
 - (CGFloat)statusBarHeight {
-    return UIInterfaceOrientationIsLandscape([UIApplication sharedApplication].statusBarOrientation)
-    ? [UIApplication sharedApplication].statusBarFrame.size.width
-    : [UIApplication sharedApplication].statusBarFrame.size.height;
+    if(UIInterfaceOrientationIsLandscape([UIApplication sharedApplication].statusBarOrientation)){
+        return [UIApplication sharedApplication].statusBarFrame.size.width;
+    }
+    else{
+        return [UIApplication sharedApplication].statusBarFrame.size.height;
+    }
 }
 
 - (CGRect)centerViewBounds {
-    if (self.navigationControllerBehavior == IIViewDeckNavigationControllerBehaviorContained)
+    if (self.navigationControllerBehavior == IIViewDeckNavigationControllerBehaviorContained){
         return self.referenceBounds;
+    }
     
-    return II_CGRectShrink(self.referenceBounds, 0, [self relativeStatusBarHeight] + (self.navigationController.navigationBarHidden ? 0 : self.navigationController.navigationBar.frame.size.height));
+    CGFloat height = 0.f;
+    if(self.navigationController.navigationBarHidden == NO){
+        height = self.navigationController.navigationBar.frame.size.height;
+    }
+    return II_CGRectShrink(self.referenceBounds,
+                           0,
+                           [self relativeStatusBarHeight] + height);
 }
 
 - (CGRect)sideViewBounds {
-    if (self.navigationControllerBehavior == IIViewDeckNavigationControllerBehaviorContained)
+    if (self.navigationControllerBehavior == IIViewDeckNavigationControllerBehaviorContained){
         return self.referenceBounds;
+    }
     
-    return II_CGRectOffsetTopAndShrink(self.referenceBounds, [self relativeStatusBarHeight]);
+    return II_CGRectOffsetTopAndShrink(self.referenceBounds,
+                                       [self relativeStatusBarHeight]);
 }
 
 - (CGFloat)limitOffset:(CGFloat)offset forOrientation:(IIViewDeckOffsetOrientation)orientation {
     if (orientation == IIViewDeckOrientationHorizontal) {
-        if (self.leftController && self.rightController) return offset;
+        if ((self.leftController != nil) &&
+            (self.rightController != nil)){
+            return offset;
+        }
         
-        if (self.leftController && _maxLedge > 0) {
+        if ((self.leftController != nil) &&
+            (_maxLedge > 0)) {
             CGFloat left = self.referenceBounds.size.width - _maxLedge;
             offset = MIN(offset, left);
         }
-        else if (self.rightController && _maxLedge > 0) {
+        else if ((self.rightController != nil) &&
+                 (_maxLedge > 0)) {
             CGFloat right = _maxLedge - self.referenceBounds.size.width;
             offset = MAX(offset, right);
         }
@@ -409,13 +433,18 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
         return offset;
     }
     else {
-        if (self.topController && self.bottomController) return offset;
+        if ((self.topController != nil) &&
+            (self.bottomController != nil)) {
+            return offset;
+        }
         
-        if (self.topController && _maxLedge > 0) {
+        if ((self.topController != nil) &&
+            (_maxLedge > 0)) {
             CGFloat top = self.referenceBounds.size.height - _maxLedge;
             offset = MIN(offset, top);
         }
-        else if (self.bottomController && _maxLedge > 0) {
+        else if ((self.bottomController != nil) &&
+                 (_maxLedge > 0)) {
             CGFloat bottom = _maxLedge - self.referenceBounds.size.height;
             offset = MAX(offset, bottom);
         }
@@ -427,12 +456,18 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
 
 - (CGRect)slidingRectForOffset:(CGFloat)offset forOrientation:(IIViewDeckOffsetOrientation)orientation {
     offset = [self limitOffset:offset forOrientation:orientation];
+    
+    CGRect slidingRect;
     if (orientation == IIViewDeckOrientationHorizontal) {
-        return (CGRect) { {self.resizesCenterView && offset < 0 ? 0 : offset, 0}, [self slidingSizeForOffset:offset forOrientation:orientation] };
+        slidingRect.origin = (CGPoint){self.resizesCenterView && offset < 0 ? 0 : offset, 0};
+        slidingRect.size = [self slidingSizeForOffset:offset forOrientation:orientation];
     }
     else {
-        return (CGRect) { {0, self.resizesCenterView && offset < 0 ? 0 : offset}, [self slidingSizeForOffset:offset forOrientation:orientation] };
+        slidingRect.origin = (CGPoint){0, self.resizesCenterView && offset < 0 ? 0 : offset};
+        slidingRect.size = [self slidingSizeForOffset:offset forOrientation:orientation];
     }
+    
+    return slidingRect;
 }
 
 - (CGSize)slidingSizeForOffset:(CGFloat)offset forOrientation:(IIViewDeckOffsetOrientation)orientation {
@@ -440,10 +475,12 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     
     offset = [self limitOffset:offset forOrientation:orientation];
     if (orientation == IIViewDeckOrientationHorizontal) {
-        return (CGSize) { self.centerViewBounds.size.width - ABS(offset), self.centerViewBounds.size.height };
+        return CGSizeMake(self.centerViewBounds.size.width - ABS(offset),
+                          self.centerViewBounds.size.height );
     }
     else {
-        return (CGSize) { self.centerViewBounds.size.width, self.centerViewBounds.size.height - ABS(offset) };
+        return CGSizeMake(self.centerViewBounds.size.width,
+                          self.centerViewBounds.size.height - ABS(offset));
     }
 }
 
@@ -642,7 +679,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
         return;
     }
     
-    [self doForControllers:^(UIViewController* controller, IIViewDeckSide side) {
+    [self executeBlockOnSideControllers:^(UIViewController* controller, IIViewDeckSide side) {
         if (controller) {
             _maxLedge = [self sizeAsLedge:maxSize forSide:side];
             if (_ledge[side] > _maxLedge)
@@ -677,7 +714,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
                 ? self.referenceBounds.size.width : self.referenceBounds.size.height) - ledge;
 }
 
-#pragma mark - View lifecycle
+#pragma mark - View Lifecycle
 
 - (void)loadView
 {
@@ -741,7 +778,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
             [self.centerController.view removeFromSuperview];
             [self.centerView addSubview:self.centerController.view];
             
-            [self doForControllers:^(UIViewController* controller, IIViewDeckSide side) {
+            [self executeBlockOnSideControllers:^(UIViewController* controller, IIViewDeckSide side) {
                 [controller.view removeFromSuperview];
                 [self.referenceView insertSubview:controller.view belowSubview:self.slidingControllerView];
             }];
@@ -752,7 +789,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
             self.centerView.frame = self.centerViewBounds;
             self.centerController.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
             self.centerController.view.frame = self.centerView.bounds;
-            [self doForControllers:^(UIViewController* controller, IIViewDeckSide side) {
+            [self executeBlockOnSideControllers:^(UIViewController* controller, IIViewDeckSide side) {
                 controller.view.frame = self.sideViewBounds;
                 controller.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
             }];
@@ -776,7 +813,10 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
         
         [self addPanners];
         
-        if ([self isSideClosed:IIViewDeckSideLeft] && [self isSideClosed:IIViewDeckSideRight] && [self isSideClosed:IIViewDeckSideTop] && [self isSideClosed:IIViewDeckSideBottom])
+        if ([self isSideClosed:IIViewDeckSideLeft] &&
+            [self isSideClosed:IIViewDeckSideRight] &&
+            [self isSideClosed:IIViewDeckSideTop] &&
+            [self isSideClosed:IIViewDeckSideBottom])
             [self centerViewVisible];
         else
             [self centerViewHidden];
@@ -913,6 +953,8 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
 }
 
 - (void)arrangeViewsAfterRotation {
+    //This is fine to cast here since UIInterfaceOrientation begins enumerating at 1
+    //  and UIDeviceOrientationUnknown is 0
     _willAppearShouldArrangeViewsAfterRotation = (UIInterfaceOrientation)UIDeviceOrientationUnknown;
     if (_preRotationSize.width <= 0 || _preRotationSize.height <= 0) return;
     
@@ -1017,7 +1059,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     }
 }
 
-- (void)doForControllers:(void(^)(UIViewController* controller, IIViewDeckSide side))action {
+- (void)executeBlockOnSideControllers:(void(^)(UIViewController* controller, IIViewDeckSide side))action {
     if (!action) return;
     for (IIViewDeckSide side=IIViewDeckSideLeft; side<=IIViewDeckSideBottom; side++) {
         action(_controllers[side], side);
@@ -1109,22 +1151,6 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     }
 }
 
-- (void)notifyClosingAnimationSide:(IIViewDeckSide)viewDeckSide
-                          animated:(BOOL)animated {
-    if (viewDeckSide == IIViewDeckSideNone) return;
-
-    [self notifyAppearanceForSide:viewDeckSide
-                         animated:animated
-                             from:IIViewDeckViewStateVisible
-                               to:IIViewDeckViewStateInTransition];
-
-    if (![self isSideClosed:viewDeckSide]) {
-        [self performDelegate:@selector(viewDeckController:closingAnimationViewSide:animated:)
-                         side:viewDeckSide
-                     animated:animated];
-    }
-}
-
 - (void)notifyDidCloseSide:(IIViewDeckSide)viewDeckSide
                   animated:(BOOL)animated {
     if (viewDeckSide == IIViewDeckSideNone) return;
@@ -1148,15 +1174,6 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
                   orientation:(IIViewDeckOffsetOrientation)orientation
                       panning:(BOOL)panning {
     [self performDelegate:@selector(viewDeckController:didChangeOffset:orientation:panning:)
-                   offset:offset
-              orientation:orientation
-                  panning:panning];
-}
-
-- (void)notifyWillChangeOffset:(CGFloat)offset
-                   orientation:(IIViewDeckOffsetOrientation)orientation
-                       panning:(BOOL)panning {
-    [self performDelegate:@selector(viewDeckController:willChangeOffset:orientation:panning:)
                    offset:offset
               orientation:orientation
                   panning:panning];
@@ -1229,7 +1246,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
         }
     }
     
-    [self doForControllers:^(UIViewController *controller, IIViewDeckSide side) {
+    [self executeBlockOnSideControllers:^(UIViewController *controller, IIViewDeckSide side) {
         if (from < to && _sideAppeared[side] <= from){
             return;
         }
@@ -1246,7 +1263,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
 
 
 
-#pragma mark - controller state
+#pragma mark - Controller State
 
 -(void)setCenterhiddenInteractivity:(IIViewDeckCenterHiddenInteraction)centerhiddenInteractivity {
     _centerhiddenInteractivity = centerhiddenInteractivity;
@@ -1366,23 +1383,15 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
         
         [self notifyWillOpenSide:side
                         animated:animated];
-
-        CGFloat offset = [self ledgeOffsetForSide:side];
-        IIViewDeckOffsetOrientation orientation =
-        IIViewDeckOffsetOrientationFromIIViewDeckSide(side);
-
         [UIView
          animateWithDuration:duration
          delay:0
          options:options
          animations:^{
-
-             [self notifyWillChangeOffset:offset orientation:orientation panning:NO];
-
              UIViewController *sideViewController = [self controllerForSide:side];
              sideViewController.view.hidden = NO;
-             [self setSlidingFrameForOffset:offset
-                             forOrientation:orientation];
+             [self setSlidingFrameForOffset:[self ledgeOffsetForSide:side]
+                             forOrientation:IIViewDeckOffsetOrientationFromIIViewDeckSide(side)];
              [self centerViewHidden];
          } completion:^(BOOL finished) {
              if (completed){ completed(self, YES); }
@@ -1535,7 +1544,6 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
      delay:0
      options:options
      animations:^{
-         [self notifyClosingAnimationSide:side animated:animated];
          [self setSlidingFrameForOffset:0
                          forOrientation:IIViewDeckOffsetOrientationFromIIViewDeckSide(side)];
          [self centerViewVisible];
@@ -1641,7 +1649,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
 
 - (void)setCenterController:(UIViewController *)newCenterController withScootAnimationToSide:(IIViewDeckSide)side{
     if ( (newCenterController != nil) &&
-        ([newCenterController isEqual:self.centerController] == NO)) {
+         ([newCenterController isEqual:self.centerController] == NO)) {
         
         CGRect frame;
         frame.size = self.centerView.frame.size;
@@ -1668,22 +1676,10 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
                 break;
         }
         
-        [self addChildViewController:newCenterController];
-        [self.centerView insertSubview:newCenterController.view belowSubview:self.centerController.view];
-        newCenterController.view.frame = self.referenceBounds;
-        
-        [UIView
-         animateWithDuration:0.5
-         animations:^{
-             self.centerController.view.frame = frame;
-         }
-         completion:^(BOOL finished) {
-             self.centerController = newCenterController;
-             self.centerController.view.frame = CGRectMake(0,
-                                                           0,
-                                                           self.centerView.frame.size.width,
-                                                           self.centerView.frame.size.height);
-         }];
+        [self revealNewCenterController:newCenterController
+                  transitionAnimation:^{
+            self.centerController.view.frame = frame;
+        }];
     }
 }
 
@@ -2437,13 +2433,15 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
 }
 
 
-#pragma mark - Pre iOS5 message relaying
+#pragma mark - Rotation
 
 - (void)relayRotationMethod:(void(^)(UIViewController* controller))relay {
     // first check ios6. we return yes in the method, so don't bother
     BOOL ios6 = ([super respondsToSelector:@selector(shouldAutomaticallyForwardRotationMethods)] &&
                  [self shouldAutomaticallyForwardRotationMethods]);
     if (ios6) return;
+    //only manuall forwarding rotation methods from here
+    //  when shouldAutomaticallyForwardRotationMethods == NO
     
     // no need to check for ios5, since we already said that we'd handle it ourselves.
     relay(self.centerController);
@@ -2453,7 +2451,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     relay(self.bottomController);
 }
 
-#pragma mark - center view hidden stuff
+#pragma mark - Center View Hidden
 
 - (void)centerViewVisible {
     [self removePanners];
@@ -2497,8 +2495,6 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
         
         [self addPanners];
     }
-
-    self.centerTapper.accessibilityLabel = self.centerTapperAccessibilityLabel;
     
     [self applyShadowToSlidingViewAnimated:YES];
 }
@@ -3138,7 +3134,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     __block IIViewDeckSide currentSide = IIViewDeckSideNone;
     
     //finds the current side a given controller is on
-    [self doForControllers:^(UIViewController* sideController, IIViewDeckSide side) {
+    [self executeBlockOnSideControllers:^(UIViewController* sideController, IIViewDeckSide side) {
         if (controller == sideController){
             currentSide = side;
         }
@@ -3147,7 +3143,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     //empty initial implementations
     void(^beforeBlock)() = nil;
     IIViewDeckAppearanceBlock afterBlock = nil;
-#warning fix this method
+    
     if (_viewFirstAppeared) {
         beforeBlock = ^{
             [self notifyAppearanceForSide:side
@@ -3254,78 +3250,141 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     [self setController:bottomController forSide:IIViewDeckSideBottom];
 }
 
+- (void)revealNewCenterController:(UIViewController *)newCenterController
+            transitionAnimation:(void(^)(void))animations{
+    if ([_centerController isEqual:newCenterController]) {
+        return;
+    }
+    
+    //add new center controller below current one
+    [newCenterController viewWillAppear:YES];
+    [self addChildViewController:newCenterController];
+    [self.centerView insertSubview:newCenterController.view belowSubview:self.centerController.view];
+    newCenterController.view.frame = self.referenceBounds;
+    
+    [self prepareCenterForNewController:newCenterController shouldModifyViewHeirarchy:NO];
+    [self.centerController viewWillDisappear:YES];
+    [self restoreShadowToSlidingView];
+    [self removePanners];
+    
+    //animate current center to side
+    [UIView
+     animateWithDuration:kIIViewDeckDefaultScootAnimationDuration
+     delay:0.f
+     options:UIViewAnimationOptionCurveEaseOut
+     animations:animations
+     completion:^(BOOL finished) {
+         //swap out current center for new center
+         [newCenterController viewDidAppear:YES];
+         
+         [self.centerController.view removeFromSuperview];
+         [self.centerController viewDidDisappear:YES];
+         
+         _centerController = newCenterController;
+         
+         CGRect finalFrame = CGRectMake(0,
+                                      0,
+                                      self.centerView.frame.size.width,
+                                      self.centerView.frame.size.height);
+         [self configureNewCenterControllerWithFrame:finalFrame modifyViewHeirarchy:NO];
+         
+         [newCenterController didMoveToParentViewController:self];
+     }];
+}
+
+- (void)prepareCenterForNewController:(UIViewController *)centerController shouldModifyViewHeirarchy:(BOOL)shouldModifyHeirarchy{
+    [_centerController willMoveToParentViewController:nil];
+    
+    //clean up ivars
+    if ([centerController isEqual:self.leftController]) self.leftController = nil;
+    if ([centerController isEqual:self.rightController]) self.rightController = nil;
+    if ([centerController isEqual:self.topController]) self.topController = nil;
+    if ([centerController isEqual:self.bottomController]) self.bottomController = nil;
+    
+    if (_viewFirstAppeared) {
+        if (shouldModifyHeirarchy) {
+            [_centerController viewWillDisappear:NO];
+        }
+        [self restoreShadowToSlidingView];
+        [self removePanners];
+        
+        if (shouldModifyHeirarchy) {
+            [_centerController.view removeFromSuperview];
+            [_centerController viewDidDisappear:NO];
+            [self.centerView removeFromSuperview];
+        }
+    }
+    
+    @try {
+        [_centerController removeObserver:self forKeyPath:@"title"];
+        if (self.automaticallyUpdateTabBarItems) {
+            [self removeTabBarObserversForCenterController];
+        }
+    }
+    @catch (NSException *exception) {}
+    
+    [_centerController setViewDeckController:nil];
+}
+
+- (void)configureNewCenterControllerWithFrame:(CGRect)currentFrame modifyViewHeirarchy:(BOOL)modifyHeirarchy{
+    [_centerController setViewDeckController:self];
+    [_centerController addObserver:self forKeyPath:@"title" options:0 context:nil];
+    self.title = _centerController.title;
+    if (self.automaticallyUpdateTabBarItems) {
+        [self addTabBarObserversForCenterController];
+        self.hidesBottomBarWhenPushed = _centerController.hidesBottomBarWhenPushed;
+    }
+    
+    if (_viewFirstAppeared) {
+        if (modifyHeirarchy) {
+            [self.view addSubview:self.centerView];
+            [_centerController viewWillAppear:NO];
+        }
+        
+        UINavigationController *navController = nil;
+        if([_centerController isKindOfClass:[UINavigationController class]]){
+            navController = (UINavigationController *)_centerController;
+        }
+        
+        BOOL barHidden = NO;
+        if (navController != nil && !navController.navigationBarHidden) {
+            barHidden = YES;
+            navController.navigationBarHidden = YES;
+        }
+        
+        [self setSlidingAndReferenceViews];
+        _centerController.view.frame = currentFrame;
+        _centerController.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+        _centerController.view.hidden = NO;
+        
+        if (modifyHeirarchy) {
+            [self.centerView addSubview:_centerController.view];
+        }
+        
+        if (barHidden) {
+            navController.navigationBarHidden = NO;
+        }
+        
+        [self addPanners];
+        [self applyShadowToSlidingViewAnimated:NO];
+        
+        if (modifyHeirarchy) {
+            [_centerController viewDidAppear:NO];
+        }
+    }
+}
 
 - (void)setCenterController:(UIViewController *)centerController {
     if ([_centerController isEqual:centerController]) {
         return;
     }
     
-    IIViewDeckAppearanceBlock afterBlock = nil;
-    IIViewDeckAppearanceBlock beforeBlock = nil;
-    
-    __block CGRect currentFrame = self.referenceBounds;
-    if (_viewFirstAppeared) {
-        beforeBlock = ^(UIViewController* controller) {
-            [controller viewWillDisappear:NO];
-            [self restoreShadowToSlidingView];
-            [self removePanners];
-            [controller.view removeFromSuperview];
-            [controller viewDidDisappear:NO];
-            [self.centerView removeFromSuperview];
-        };
-        afterBlock = ^(UIViewController* controller) {
-            [self.view addSubview:self.centerView];
-            [controller viewWillAppear:NO];
-            UINavigationController* navController = [centerController isKindOfClass:[UINavigationController class]]
-            ? (UINavigationController*)centerController
-            : nil;
-            BOOL barHidden = NO;
-            if (navController != nil && !navController.navigationBarHidden) {
-                barHidden = YES;
-                navController.navigationBarHidden = YES;
-            }
-            
-            [self setSlidingAndReferenceViews];
-            controller.view.frame = currentFrame;
-            controller.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-            controller.view.hidden = NO;
-            [self.centerView addSubview:controller.view];
-            
-            if (barHidden) {
-                navController.navigationBarHidden = NO;
-            }
-            
-            [self addPanners];
-            [self applyShadowToSlidingViewAnimated:NO];
-            [controller viewDidAppear:NO];
-        };
-    }
+    CGRect currentFrame = self.referenceBounds;
     
     // start the transition
     if (_centerController) {
         currentFrame = _centerController.view.frame;
-        [_centerController willMoveToParentViewController:nil];
-        
-        if ([centerController isEqual:self.leftController]) self.leftController = nil;
-        if ([centerController isEqual:self.rightController]) self.rightController = nil;
-        if ([centerController isEqual:self.topController]) self.topController = nil;
-        if ([centerController isEqual:self.bottomController]) self.bottomController = nil;
-        
-        if(beforeBlock != nil){
-            beforeBlock(_centerController);
-        }
-        
-        @try {
-            [_centerController removeObserver:self forKeyPath:@"title"];
-            if (self.automaticallyUpdateTabBarItems) {
-                [_centerController removeObserver:self forKeyPath:@"tabBarItem.title"];
-                [_centerController removeObserver:self forKeyPath:@"tabBarItem.image"];
-                [_centerController removeObserver:self forKeyPath:@"hidesBottomBarWhenPushed"];
-            }
-        }
-        @catch (NSException *exception) {}
-        
-        [_centerController setViewDeckController:nil];
+        [self prepareCenterForNewController:centerController shouldModifyViewHeirarchy:YES];
         
         [_centerController removeFromParentViewController];
         [_centerController didMoveToParentViewController:nil];
@@ -3337,21 +3396,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     if (_centerController) {
         // and finish the transition
         [self addChildViewController:_centerController];
-        [_centerController setViewDeckController:self];
-        [_centerController addObserver:self forKeyPath:@"title" options:0 context:nil];
-        self.title = _centerController.title;
-        if (self.automaticallyUpdateTabBarItems) {
-            [_centerController addObserver:self forKeyPath:@"tabBarItem.title" options:0 context:nil];
-            [_centerController addObserver:self forKeyPath:@"tabBarItem.image" options:0 context:nil];
-            [_centerController addObserver:self forKeyPath:@"hidesBottomBarWhenPushed" options:0 context:nil];
-            self.tabBarItem.title = _centerController.tabBarItem.title;
-            self.tabBarItem.image = _centerController.tabBarItem.image;
-            self.hidesBottomBarWhenPushed = _centerController.hidesBottomBarWhenPushed;
-        }
-        
-        if (afterBlock != nil) {
-            afterBlock(_centerController);
-        }
+        [self configureNewCenterControllerWithFrame:currentFrame modifyViewHeirarchy:YES];
         
         [_centerController didMoveToParentViewController:self];
         
@@ -3361,24 +3406,32 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     }
 }
 
+- (void)removeTabBarObserversForCenterController {
+    @try {
+        [_centerController removeObserver:self forKeyPath:@"tabBarItem.title"];
+        [_centerController removeObserver:self forKeyPath:@"tabBarItem.image"];
+        [_centerController removeObserver:self forKeyPath:@"hidesBottomBarWhenPushed"];
+    }
+    @catch (NSException *exception) {}
+}
+
+- (void)addTabBarObserversForCenterController {
+    [_centerController addObserver:self forKeyPath:@"tabBarItem.title" options:0 context:nil];
+    [_centerController addObserver:self forKeyPath:@"tabBarItem.image" options:0 context:nil];
+    [_centerController addObserver:self forKeyPath:@"hidesBottomBarWhenPushed" options:0 context:nil];
+    self.tabBarItem.title = _centerController.tabBarItem.title;
+    self.tabBarItem.image = _centerController.tabBarItem.image;
+}
+
 - (void)setAutomaticallyUpdateTabBarItems:(BOOL)automaticallyUpdateTabBarItems {
     if (_automaticallyUpdateTabBarItems) {
-        @try {
-            [_centerController removeObserver:self forKeyPath:@"tabBarItem.title"];
-            [_centerController removeObserver:self forKeyPath:@"tabBarItem.image"];
-            [_centerController removeObserver:self forKeyPath:@"hidesBottomBarWhenPushed"];
-        }
-        @catch (NSException *exception) {}
+        [self removeTabBarObserversForCenterController];
     }
     
     _automaticallyUpdateTabBarItems = automaticallyUpdateTabBarItems;
     
     if (_automaticallyUpdateTabBarItems) {
-        [_centerController addObserver:self forKeyPath:@"tabBarItem.title" options:0 context:nil];
-        [_centerController addObserver:self forKeyPath:@"tabBarItem.image" options:0 context:nil];
-        [_centerController addObserver:self forKeyPath:@"hidesBottomBarWhenPushed" options:0 context:nil];
-        self.tabBarItem.title = _centerController.tabBarItem.title;
-        self.tabBarItem.image = _centerController.tabBarItem.image;
+        [self addTabBarObserversForCenterController];
     }
 }
 
@@ -3411,7 +3464,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     }
 }
 
-#pragma mark - observation
+#pragma mark - Observation
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
     if (object == _centerController) {
@@ -3442,10 +3495,14 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     if ([keyPath isEqualToString:@"bounds"]) {
         [self setSlidingFrameForOffset:_offset forOrientation:_offsetOrientation];
         self.slidingControllerView.layer.shadowPath = [UIBezierPath bezierPathWithRect:self.referenceBounds].CGPath;
-        UINavigationController* navController = [self.centerController isKindOfClass:[UINavigationController class]]
-        ? (UINavigationController*)self.centerController
-        : nil;
-        if (navController != nil && !navController.navigationBarHidden) {
+        
+        UINavigationController* navController = nil;
+        if([self.centerController isKindOfClass:[UINavigationController class]]){
+            navController = (UINavigationController*)self.centerController;
+        }
+        
+        if ((navController != nil) &&
+            (navController.navigationBarHidden == NO)) {
             navController.navigationBarHidden = YES;
             navController.navigationBarHidden = NO;
         }

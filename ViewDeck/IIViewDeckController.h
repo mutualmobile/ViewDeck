@@ -10,7 +10,7 @@
 //  use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 //  of the Software, and to permit persons to whom the Software is furnished to do
 //  so, subject to the following conditions:
-//
+// 
 //  The above copyright notice and this permission notice shall be included in all
 //  copies or substantial portions of the Software.
 //
@@ -45,7 +45,7 @@ typedef NS_ENUM(NSInteger, IIViewDeckOffsetOrientation) {
 typedef NS_ENUM(NSInteger, IIViewDeckPanningMode) {
     IIViewDeckPanningModeNone,              // no panning allowed
     IIViewDeckPanningModeFullView,        // the default: touch anywhere in the center view to drag the center view around
-    IIViewDeckPanningModeNavigationBar,   // panning only occurs when you start touching in the navigation bar (when the center controller is a UINavigationController with a visible navigation bar). Otherwise it will behave as IIViewDeckPanningModeNone.
+    IIViewDeckPanningModeNavigationBar,   // panning only occurs when you start touching in the navigation bar (when the center controller is a UINavigationController with a visible navigation bar). Otherwise it will behave as IIViewDeckPanningModeNone. 
     IIViewDeckPanningModeView,      // panning only occurs when you start touching in a UIView set in panningView property
     IIViewDeckPanningModeDelegate,         // allows panning with a delegate
     IIViewDeckPanningModeNavigationBarOrOpenCenter      //panning occurs when you start touching the navigation bar if the center controller is visible.  If the left or right controller is open, pannning occurs anywhere on the center controller, not just the navbar.
@@ -77,7 +77,7 @@ extern NSString* NSStringFromIIViewDeckSide(IIViewDeckSide side);
 extern IIViewDeckOffsetOrientation IIViewDeckOffsetOrientationFromIIViewDeckSide(IIViewDeckSide side);
 
 @interface IIViewDeckController : UIViewController {
-@private
+@private    
     CGPoint _panOrigin;
     UInt32 _viewAppeared;
     BOOL _viewFirstAppeared;
@@ -103,7 +103,6 @@ typedef void (^IIViewDeckControllerBounceBlock) (IIViewDeckController *controlle
 @property (nonatomic, strong) UIViewController* rightController;
 @property (nonatomic, strong) UIViewController* topController;
 @property (nonatomic, strong) UIViewController* bottomController;
-@property (nonatomic, copy) NSString *centerTapperAccessibilityLabel;
 @property (nonatomic, readonly, weak) UIViewController* slidingController;
 
 @property (nonatomic, strong) UIView* panningView;
@@ -251,7 +250,6 @@ typedef void (^IIViewDeckControllerBounceBlock) (IIViewDeckController *controlle
 
 - (void)viewDeckController:(IIViewDeckController*)viewDeckController applyShadow:(CALayer*)shadowLayer withBounds:(CGRect)rect;
 
-- (void)viewDeckController:(IIViewDeckController*)viewDeckController willChangeOffset:(CGFloat)offset orientation:(IIViewDeckOffsetOrientation)orientation panning:(BOOL)panning;
 - (void)viewDeckController:(IIViewDeckController*)viewDeckController didChangeOffset:(CGFloat)offset orientation:(IIViewDeckOffsetOrientation)orientation panning:(BOOL)panning;
 - (void)viewDeckController:(IIViewDeckController *)viewDeckController didBounceViewSide:(IIViewDeckSide)viewDeckSide openingController:(UIViewController*)openingController;
 - (void)viewDeckController:(IIViewDeckController *)viewDeckController didBounceViewSide:(IIViewDeckSide)viewDeckSide closingController:(UIViewController*)closingController;
@@ -262,7 +260,6 @@ typedef void (^IIViewDeckControllerBounceBlock) (IIViewDeckController *controlle
 - (BOOL)viewDeckController:(IIViewDeckController*)viewDeckController shouldCloseViewSide:(IIViewDeckSide)viewDeckSide animated:(BOOL)animated;
 - (void)viewDeckController:(IIViewDeckController*)viewDeckController willCloseViewSide:(IIViewDeckSide)viewDeckSide animated:(BOOL)animated;
 - (void)viewDeckController:(IIViewDeckController*)viewDeckController didCloseViewSide:(IIViewDeckSide)viewDeckSide animated:(BOOL)animated;
-- (void)viewDeckController:(IIViewDeckController*)viewDeckController closingAnimationViewSide:(IIViewDeckSide)viewDeckSide animated:(BOOL)animated;
 - (void)viewDeckController:(IIViewDeckController*)viewDeckController didShowCenterViewFromSide:(IIViewDeckSide)viewDeckSide animated:(BOOL)animated;
 
 - (BOOL)viewDeckController:(IIViewDeckController *)viewDeckController shouldPreviewBounceViewSide:(IIViewDeckSide)viewDeckSide;
@@ -274,10 +271,10 @@ typedef void (^IIViewDeckControllerBounceBlock) (IIViewDeckController *controlle
 @end
 
 
-// category on UIViewController to provide access to the viewDeckController in the
+// category on UIViewController to provide access to the viewDeckController in the 
 // contained viewcontrollers, a la UINavigationController.
-@interface UIViewController (UIViewDeckItem)
+@interface UIViewController (UIViewDeckItem) 
 
-@property(nonatomic,readonly,retain) IIViewDeckController *viewDeckController;
+@property(nonatomic,readonly,retain) IIViewDeckController *viewDeckController; 
 
 @end
