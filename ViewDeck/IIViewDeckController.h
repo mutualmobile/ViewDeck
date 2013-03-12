@@ -103,6 +103,7 @@ typedef void (^IIViewDeckControllerBounceBlock) (IIViewDeckController *controlle
 @property (nonatomic, strong) UIViewController* rightController;
 @property (nonatomic, strong) UIViewController* topController;
 @property (nonatomic, strong) UIViewController* bottomController;
+@property (nonatomic, copy) NSString *centerTapperAccessibilityLabel;
 @property (nonatomic, readonly, weak) UIViewController* slidingController;
 
 @property (nonatomic, strong) UIView* panningView;
@@ -250,6 +251,7 @@ typedef void (^IIViewDeckControllerBounceBlock) (IIViewDeckController *controlle
 
 - (void)viewDeckController:(IIViewDeckController*)viewDeckController applyShadow:(CALayer*)shadowLayer withBounds:(CGRect)rect;
 
+- (void)viewDeckController:(IIViewDeckController*)viewDeckController willChangeOffset:(CGFloat)offset orientation:(IIViewDeckOffsetOrientation)orientation panning:(BOOL)panning;
 - (void)viewDeckController:(IIViewDeckController*)viewDeckController didChangeOffset:(CGFloat)offset orientation:(IIViewDeckOffsetOrientation)orientation panning:(BOOL)panning;
 - (void)viewDeckController:(IIViewDeckController *)viewDeckController didBounceViewSide:(IIViewDeckSide)viewDeckSide openingController:(UIViewController*)openingController;
 - (void)viewDeckController:(IIViewDeckController *)viewDeckController didBounceViewSide:(IIViewDeckSide)viewDeckSide closingController:(UIViewController*)closingController;
@@ -260,6 +262,7 @@ typedef void (^IIViewDeckControllerBounceBlock) (IIViewDeckController *controlle
 - (BOOL)viewDeckController:(IIViewDeckController*)viewDeckController shouldCloseViewSide:(IIViewDeckSide)viewDeckSide animated:(BOOL)animated;
 - (void)viewDeckController:(IIViewDeckController*)viewDeckController willCloseViewSide:(IIViewDeckSide)viewDeckSide animated:(BOOL)animated;
 - (void)viewDeckController:(IIViewDeckController*)viewDeckController didCloseViewSide:(IIViewDeckSide)viewDeckSide animated:(BOOL)animated;
+- (void)viewDeckController:(IIViewDeckController*)viewDeckController closingAnimationViewSide:(IIViewDeckSide)viewDeckSide animated:(BOOL)animated;
 - (void)viewDeckController:(IIViewDeckController*)viewDeckController didShowCenterViewFromSide:(IIViewDeckSide)viewDeckSide animated:(BOOL)animated;
 
 - (BOOL)viewDeckController:(IIViewDeckController *)viewDeckController shouldPreviewBounceViewSide:(IIViewDeckSide)viewDeckSide;
