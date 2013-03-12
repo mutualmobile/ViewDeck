@@ -73,9 +73,6 @@ typedef NS_ENUM(NSInteger, IIViewDeckDelegateMode) {
     IIViewDeckDelegateModeDelegateAndSubControllers  // call the delegate and the subcontrollers
 };
 
-#define IIViewDeckCenterHiddenCanTapToClose(interactivity) ((interactivity) == IIViewDeckCenterHiddenInteractionTapToClose || (interactivity) == IIViewDeckCenterHiddenInteractionTapToCloseBouncing)
-#define IIViewDeckCenterHiddenIsInteractive(interactivity) ((interactivity) == IIViewDeckCenterHiddenInteractionFull)
-
 extern NSString* NSStringFromIIViewDeckSide(IIViewDeckSide side);
 extern IIViewDeckOffsetOrientation IIViewDeckOffsetOrientationFromIIViewDeckSide(IIViewDeckSide side);
 
@@ -235,6 +232,8 @@ typedef void (^IIViewDeckControllerBounceBlock) (IIViewDeckController *controlle
 - (BOOL)isSideClosed:(IIViewDeckSide)viewDeckSide;
 - (BOOL)isSideOpen:(IIViewDeckSide)viewDeckSide;
 - (BOOL)isAnySideOpen;
+
+- (void)setCenterController:(UIViewController *)newCenterController withScootAnimationToSide:(IIViewDeckSide)side;
 
 - (CGFloat)statusBarHeight;
 
