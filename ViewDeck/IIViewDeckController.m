@@ -50,7 +50,7 @@ __typeof__(offset) __o = (offset);                      \
 { __r.size.width, __r.size.height - __o }    \
 };                                             \
 })
-#define II_CGRectOffsetBottomAndShrink(rect, offset)        \
+#define II_CGRectOffsetBumAndShrink(rect, offset)        \
 ({                                                        \
 __typeof__(rect) __r = (rect);                          \
 __typeof__(offset) __o = (offset);                      \
@@ -110,8 +110,8 @@ inline NSString* NSStringFromIIViewDeckSide(IIViewDeckSide side) {
         case IIViewDeckSideTop:
             return @"top";
             
-        case IIViewDeckSideBottom:
-            return @"bottom";
+        case IIViewDeckSideBum:
+            return @"bum";
             
         case IIViewDeckSideNone:
             return @"no";
@@ -128,7 +128,7 @@ inline IIViewDeckOffsetOrientation IIViewDeckOffsetOrientationFromIIViewDeckSide
             return IIViewDeckOrientationHorizontal;
             
         case IIViewDeckSideTop:
-        case IIViewDeckSideBottom:
+        case IIViewDeckSideBum:
             return IIViewDeckOrientationVertical;
             
         default:
@@ -226,7 +226,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
 @dynamic leftController;
 @dynamic rightController;
 @dynamic topController;
-@dynamic bottomController;
+@dynamic bumController;
 
 #pragma mark - Initalisation and deallocation
 
@@ -285,27 +285,27 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     return self;
 }
 
-- (instancetype)initWithCenterViewController:(UIViewController*)centerController bottomViewController:(UIViewController*)bottomController {
+- (instancetype)initWithCenterViewController:(UIViewController*)centerController bumViewController:(UIViewController*)bumController {
     if ((self = [self initWithCenterViewController:centerController])) {
-        self.bottomController = bottomController;
+        self.bumController = bumController;
     }
     return self;
 }
 
-- (instancetype)initWithCenterViewController:(UIViewController*)centerController topViewController:(UIViewController*)topController bottomViewController:(UIViewController*)bottomController {
+- (instancetype)initWithCenterViewController:(UIViewController*)centerController topViewController:(UIViewController*)topController bumViewController:(UIViewController*)bumController {
     if ((self = [self initWithCenterViewController:centerController])) {
         self.topController = topController;
-        self.bottomController = bottomController;
+        self.bumController = bumController;
     }
     return self;
 }
 
-- (instancetype)initWithCenterViewController:(UIViewController*)centerController leftViewController:(UIViewController*)leftController rightViewController:(UIViewController*)rightController topViewController:(UIViewController*)topController bottomViewController:(UIViewController*)bottomController {
+- (instancetype)initWithCenterViewController:(UIViewController*)centerController leftViewController:(UIViewController*)leftController rightViewController:(UIViewController*)rightController topViewController:(UIViewController*)topController bumViewController:(UIViewController*)bumController {
     if ((self = [self initWithCenterViewController:centerController])) {
         self.leftController = leftController;
         self.rightController = rightController;
         self.topController = topController;
-        self.bottomController = bottomController;
+        self.bumController = bumController;
     }
     return self;
 }
@@ -327,7 +327,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     
     _delegateMode = IIViewDeckDelegateModeDelegateOnly;
     
-    _ledge[IIViewDeckSideLeft] = _ledge[IIViewDeckSideRight] = _ledge[IIViewDeckSideTop] = _ledge[IIViewDeckSideBottom] = kIIViewDeckDefaultLedgeWidth;
+    _ledge[IIViewDeckSideLeft] = _ledge[IIViewDeckSideRight] = _ledge[IIViewDeckSideTop] = _ledge[IIViewDeckSideBum] = kIIViewDeckDefaultLedgeWidth;
 }
 
 - (void)cleanup {
@@ -374,7 +374,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     if (self.leftController) [result addObject:self.leftController];
     if (self.rightController) [result addObject:self.rightController];
     if (self.topController) [result addObject:self.topController];
-    if (self.bottomController) [result addObject:self.bottomController];
+    if (self.bumController) [result addObject:self.bumController];
     return [NSArray arrayWithArray:result];
 }
 
@@ -449,7 +449,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     }
     else {
         if ((self.topController != nil) &&
-            (self.bottomController != nil)) {
+            (self.bumController != nil)) {
             return offset;
         }
         
@@ -458,10 +458,10 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
             CGFloat top = self.referenceBounds.size.height - _maxLedge;
             offset = MIN(offset, top);
         }
-        else if ((self.bottomController != nil) &&
+        else if ((self.bumController != nil) &&
                  (_maxLedge > 0)) {
-            CGFloat bottom = _maxLedge - self.referenceBounds.size.height;
-            offset = MAX(offset, bottom);
+            CGFloat bum = _maxLedge - self.referenceBounds.size.height;
+            offset = MAX(offset, bum);
         }
         
         return offset;
@@ -526,7 +526,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     self.leftController.view.hidden = CGRectGetMinX(self.slidingControllerView.frame) <= 0;
     self.rightController.view.hidden = CGRectGetMaxX(self.slidingControllerView.frame) >= self.referenceBounds.size.width;
     self.topController.view.hidden = CGRectGetMinY(self.slidingControllerView.frame) <= 0;
-    self.bottomController.view.hidden = CGRectGetMaxY(self.slidingControllerView.frame) >= self.referenceBounds.size.height;
+    self.bumController.view.hidden = CGRectGetMaxY(self.slidingControllerView.frame) >= self.referenceBounds.size.height;
 }
 
 #pragma mark - Ledges
@@ -557,7 +557,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
             break;
         }
             
-        case IIViewDeckSideBottom: {
+        case IIViewDeckSideBum: {
             minLedge = MIN(self.referenceBounds.size.width, ledge);
             offsetter = ^CGFloat(CGFloat l) { return l - self.referenceBounds.size.height; };
             break;
@@ -657,26 +657,26 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
 }
 
 
-#pragma mark Bottom size
+#pragma mark Bum size
 
-- (void)setBottomSize:(CGFloat)bottomSize {
-    [self setBottomSize:bottomSize completion:nil];
+- (void)setBumSize:(CGFloat)bumSize {
+    [self setBumSize:bumSize completion:nil];
 }
 
-- (void)setBottomSize:(CGFloat)bottomSize completion:(void(^)(BOOL finished))completion {
-    [self setSize:bottomSize forSide:IIViewDeckSideBottom completion:completion];
+- (void)setBumSize:(CGFloat)bumSize completion:(void(^)(BOOL finished))completion {
+    [self setSize:bumSize forSide:IIViewDeckSideBum completion:completion];
 }
 
-- (CGFloat)bottomSize {
-    return [self sizeForSide:IIViewDeckSideBottom];
+- (CGFloat)bumSize {
+    return [self sizeForSide:IIViewDeckSideBum];
 }
 
-- (CGFloat)bottomViewSize {
-    return [self ledgeAsSize:_ledge[IIViewDeckSideBottom] mode:IIViewDeckSizeModeView forSide:IIViewDeckSideBottom];
+- (CGFloat)bumViewSize {
+    return [self ledgeAsSize:_ledge[IIViewDeckSideBum] mode:IIViewDeckSizeModeView forSide:IIViewDeckSideBum];
 }
 
-- (CGFloat)bottomLedgeSize {
-    return [self ledgeAsSize:_ledge[IIViewDeckSideBottom] mode:IIViewDeckSizeModeLedge forSide:IIViewDeckSideBottom];
+- (CGFloat)bumLedgeSize {
+    return [self ledgeAsSize:_ledge[IIViewDeckSideBum] mode:IIViewDeckSizeModeLedge forSide:IIViewDeckSideBum];
 }
 
 
@@ -687,7 +687,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
 }
 
 - (void)setMaxSize:(CGFloat)maxSize completion:(void(^)(BOOL finished))completion {
-    int count = (self.leftController ? 1 : 0) + (self.rightController ? 1 : 0) + (self.topController ? 1 : 0) + (self.bottomController ? 1 : 0);
+    int count = (self.leftController ? 1 : 0) + (self.rightController ? 1 : 0) + (self.topController ? 1 : 0) + (self.bumController ? 1 : 0);
     
     if (count > 1) {
         NSLog(@"IIViewDeckController: warning: setting maxLedge with more than one side controllers. Value will be ignored.");
@@ -831,7 +831,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
         if ([self isSideClosed:IIViewDeckSideLeft] &&
             [self isSideClosed:IIViewDeckSideRight] &&
             [self isSideClosed:IIViewDeckSideTop] &&
-            [self isSideClosed:IIViewDeckSideBottom])
+            [self isSideClosed:IIViewDeckSideBum])
             [self centerViewVisible];
         else
             [self centerViewHidden];
@@ -985,8 +985,8 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
         if (!II_FLOAT_EQUAL(offset, 0)) {
             if (II_FLOAT_EQUAL(offset, preSize - _ledge[IIViewDeckSideTop]))
                 adjustOffset = IIViewDeckSideTop;
-            else if (II_FLOAT_EQUAL(offset, _ledge[IIViewDeckSideBottom] - preSize))
-                adjustOffset = IIViewDeckSideBottom;
+            else if (II_FLOAT_EQUAL(offset, _ledge[IIViewDeckSideBum] - preSize))
+                adjustOffset = IIViewDeckSideBum;
         }
     }
     else {
@@ -1011,7 +1011,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
         [self setLedgeValue:_ledge[IIViewDeckSideLeft] + self.referenceBounds.size.width - _preRotationSize.width forSide:IIViewDeckSideLeft];
         [self setLedgeValue:_ledge[IIViewDeckSideRight] + self.referenceBounds.size.width - _preRotationSize.width forSide:IIViewDeckSideRight];
         [self setLedgeValue:_ledge[IIViewDeckSideTop] + self.referenceBounds.size.height - _preRotationSize.height forSide:IIViewDeckSideTop];
-        [self setLedgeValue:_ledge[IIViewDeckSideBottom] + self.referenceBounds.size.height - _preRotationSize.height forSide:IIViewDeckSideBottom];
+        [self setLedgeValue:_ledge[IIViewDeckSideBum] + self.referenceBounds.size.height - _preRotationSize.height forSide:IIViewDeckSideBum];
     }
     else {
         if (offset > 0) {
@@ -1035,7 +1035,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
             offset = self.referenceBounds.size.height - _ledge[adjustOffset];
             break;
             
-        case IIViewDeckSideBottom:
+        case IIViewDeckSideBum:
             offset = _ledge[adjustOffset] - self.referenceBounds.size.height;
             break;
             
@@ -1067,7 +1067,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
             return _ledge[viewDeckSide] - self.referenceBounds.size.width;
         case IIViewDeckSideTop:
             return self.referenceBounds.size.height - _ledge[viewDeckSide];
-        case IIViewDeckSideBottom:
+        case IIViewDeckSideBum:
             return _ledge[viewDeckSide] - self.referenceBounds.size.height;
         default:
             return 0.f;
@@ -1076,7 +1076,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
 
 - (void)executeBlockOnSideControllers:(void(^)(UIViewController* controller, IIViewDeckSide side))action {
     if (!action) return;
-    for (IIViewDeckSide side=IIViewDeckSideLeft; side<=IIViewDeckSideBottom; side++) {
+    for (IIViewDeckSide side=IIViewDeckSideLeft; side<=IIViewDeckSideBum; side++) {
         action(_controllers[side], side);
     }
 }
@@ -1092,8 +1092,8 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
         case IIViewDeckSideRight:
             return IIViewDeckSideLeft;
         case IIViewDeckSideTop:
-            return IIViewDeckSideBottom;
-        case IIViewDeckSideBottom:
+            return IIViewDeckSideBum;
+        case IIViewDeckSideBum:
             return IIViewDeckSideTop;
         default:
             return IIViewDeckSideNone;
@@ -1101,7 +1101,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
 }
 
 - (IIViewDeckSide)sideForController:(UIViewController*)controller {
-    for (IIViewDeckSide side=IIViewDeckSideLeft; side<=IIViewDeckSideBottom; side++) {
+    for (IIViewDeckSide side=IIViewDeckSideLeft; side<=IIViewDeckSideBum; side++) {
         if (_controllers[side] == controller) return side;
     }
     
@@ -1332,7 +1332,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
         case IIViewDeckSideTop:
             return CGRectGetMinY(self.slidingControllerView.frame) <= 0;
             
-        case IIViewDeckSideBottom:
+        case IIViewDeckSideBum:
             return CGRectGetMaxY(self.slidingControllerView.frame) >= self.referenceBounds.size.height;
             
         default:
@@ -1345,7 +1345,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     return ([self isSideOpen:IIViewDeckSideLeft] ||
             [self isSideOpen:IIViewDeckSideRight] ||
             [self isSideOpen:IIViewDeckSideTop] ||
-            [self isSideOpen:IIViewDeckSideBottom]);
+            [self isSideOpen:IIViewDeckSideBum]);
 }
 
 
@@ -1364,8 +1364,8 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
         case IIViewDeckSideTop:
             return II_FLOAT_EQUAL(CGRectGetMinY(self.slidingControllerView.frame), self.referenceBounds.size.height - _ledge[IIViewDeckSideTop]);
             
-        case IIViewDeckSideBottom:
-            return II_FLOAT_EQUAL(CGRectGetMaxY(self.slidingControllerView.frame), _ledge[IIViewDeckSideBottom]);
+        case IIViewDeckSideBum:
+            return II_FLOAT_EQUAL(CGRectGetMaxY(self.slidingControllerView.frame), _ledge[IIViewDeckSideBum]);
             
         default:
             return NO;
@@ -1704,7 +1704,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
         frame.size = self.centerView.frame.size;
         
         switch (side) {
-            case IIViewDeckSideBottom:
+            case IIViewDeckSideBum:
                 frame.origin = CGPointMake(0.f,
                                            self.centerView.frame.size.height);
                 break;
@@ -2048,92 +2048,92 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
 }
 
 
-#pragma mark - Bottom Side
+#pragma mark - Bum Side
 
-- (BOOL)toggleBottomView {
-    return [self toggleBottomViewAnimated:YES];
+- (BOOL)toggleBumView {
+    return [self toggleBumViewAnimated:YES];
 }
 
-- (BOOL)openBottomView {
-    return [self openBottomViewAnimated:YES];
+- (BOOL)openBumView {
+    return [self openBumViewAnimated:YES];
 }
 
-- (BOOL)closeBottomView {
-    return [self closeBottomViewAnimated:YES];
+- (BOOL)closeBumView {
+    return [self closeBumViewAnimated:YES];
 }
 
-- (BOOL)toggleBottomViewAnimated:(BOOL)animated {
-    return [self toggleBottomViewAnimated:animated
+- (BOOL)toggleBumViewAnimated:(BOOL)animated {
+    return [self toggleBumViewAnimated:animated
                                completion:nil];
 }
 
-- (BOOL)toggleBottomViewAnimated:(BOOL)animated
+- (BOOL)toggleBumViewAnimated:(BOOL)animated
                       completion:(IIViewDeckControllerBlock)completed {
-    if ([self isSideClosed:IIViewDeckSideBottom]){
-        return [self openBottomViewAnimated:animated
+    if ([self isSideClosed:IIViewDeckSideBum]){
+        return [self openBumViewAnimated:animated
                                  completion:completed];
     }
     else{
-        return [self closeBottomViewAnimated:animated
+        return [self closeBumViewAnimated:animated
                                   completion:completed];
     }
 }
 
-- (BOOL)openBottomViewAnimated:(BOOL)animated {
-    return [self openBottomViewAnimated:animated
+- (BOOL)openBumViewAnimated:(BOOL)animated {
+    return [self openBumViewAnimated:animated
                              completion:nil];
 }
 
-- (BOOL)openBottomViewAnimated:(BOOL)animated
+- (BOOL)openBumViewAnimated:(BOOL)animated
                     completion:(IIViewDeckControllerBlock)completed {
-    return [self openSideView:IIViewDeckSideBottom
+    return [self openSideView:IIViewDeckSideBum
                      animated:animated
                    completion:completed];
 }
 
-- (BOOL)openBottomViewBouncing:(IIViewDeckControllerBounceBlock)bounced {
-    return [self openBottomViewBouncing:bounced
+- (BOOL)openBumViewBouncing:(IIViewDeckControllerBounceBlock)bounced {
+    return [self openBumViewBouncing:bounced
                              completion:nil];
 }
 
-- (BOOL)openBottomViewBouncing:(IIViewDeckControllerBounceBlock)bounced
+- (BOOL)openBumViewBouncing:(IIViewDeckControllerBounceBlock)bounced
                     completion:(IIViewDeckControllerBlock)completed {
-    return [self openSideView:IIViewDeckSideBottom
+    return [self openSideView:IIViewDeckSideBum
                  bounceOffset:-self.referenceBounds.size.height
-                 targetOffset:_ledge[IIViewDeckSideBottom] - self.referenceBounds.size.height
+                 targetOffset:_ledge[IIViewDeckSideBum] - self.referenceBounds.size.height
                       bounced:bounced
                    completion:completed];
 }
 
-- (BOOL)closeBottomViewAnimated:(BOOL)animated {
-    return [self closeBottomViewAnimated:animated
+- (BOOL)closeBumViewAnimated:(BOOL)animated {
+    return [self closeBumViewAnimated:animated
                               completion:nil];
 }
 
-- (BOOL)closeBottomViewAnimated:(BOOL)animated
+- (BOOL)closeBumViewAnimated:(BOOL)animated
                      completion:(IIViewDeckControllerBlock)completed {
-    return [self closeBottomViewAnimated:animated
+    return [self closeBumViewAnimated:animated
                                 duration:kIIViewDeckDefaultDuration
                               completion:completed];
 }
 
-- (BOOL)closeBottomViewAnimated:(BOOL)animated
+- (BOOL)closeBumViewAnimated:(BOOL)animated
                        duration:(NSTimeInterval)duration
                      completion:(IIViewDeckControllerBlock)completed {
-    return [self closeSideView:IIViewDeckSideBottom
+    return [self closeSideView:IIViewDeckSideBum
                       animated:animated
                       duration:duration
                     completion:completed];
 }
 
-- (BOOL)closeBottomViewBouncing:(IIViewDeckControllerBounceBlock)bounced {
-    return [self closeBottomViewBouncing:bounced
+- (BOOL)closeBumViewBouncing:(IIViewDeckControllerBounceBlock)bounced {
+    return [self closeBumViewBouncing:bounced
                               completion:nil];
 }
 
-- (BOOL)closeBottomViewBouncing:(IIViewDeckControllerBounceBlock)bounced
+- (BOOL)closeBumViewBouncing:(IIViewDeckControllerBounceBlock)bounced
                      completion:(IIViewDeckControllerBlock)completed {
-    return [self closeSideView:IIViewDeckSideBottom
+    return [self closeSideView:IIViewDeckSideBum
                   bounceOffset:-self.referenceBounds.size.height
                        bounced:bounced
                     completion:completed];
@@ -2212,7 +2212,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     UIViewController *previewController = [self controllerForSide:viewDeckSide];
     NSString *keyPath = @"position.x";
     
-    if ((viewDeckSide == IIViewDeckSideBottom) ||
+    if ((viewDeckSide == IIViewDeckSideBum) ||
         (viewDeckSide == IIViewDeckSideTop)) {
         keyPath = @"position.y";
     }
@@ -2305,7 +2305,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
             direction = 1;
             break;
             
-        case IIViewDeckSideBottom:
+        case IIViewDeckSideBum:
             position = self.slidingControllerView.layer.position.y;
             direction = -1;
             break;
@@ -2354,11 +2354,11 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     }
     else if (([self isSideOpen:IIViewDeckSideTop])) {
         fromSide = IIViewDeckSideTop;
-        toSide = IIViewDeckSideBottom;
-        targetOffset = _ledge[IIViewDeckSideBottom] - self.referenceBounds.size.height;
+        toSide = IIViewDeckSideBum;
+        targetOffset = _ledge[IIViewDeckSideBum] - self.referenceBounds.size.height;
     }
-    else if (([self isSideOpen:IIViewDeckSideBottom])) {
-        fromSide = IIViewDeckSideBottom;
+    else if (([self isSideOpen:IIViewDeckSideBum])) {
+        fromSide = IIViewDeckSideBum;
         toSide = IIViewDeckSideTop;
         targetOffset = self.referenceBounds.size.height - _ledge[IIViewDeckSideTop];
     }
@@ -2440,8 +2440,8 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
                                  duration:duration
                                completion:completed];
     }
-    else if ([self isSideClosed:IIViewDeckSideBottom] == NO) {
-        return [self closeBottomViewAnimated:animated
+    else if ([self isSideClosed:IIViewDeckSideBum] == NO) {
+        return [self closeBumViewAnimated:animated
                                     duration:duration
                                   completion:completed];
     }
@@ -2472,8 +2472,8 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
         return [self closeTopViewBouncing:bounced
                                completion:completed];
     }
-    else if (([self isSideOpen:IIViewDeckSideBottom])) {
-        return [self closeBottomViewBouncing:bounced
+    else if (([self isSideOpen:IIViewDeckSideBum])) {
+        return [self closeBumViewBouncing:bounced
                                   completion:completed];
     }
     
@@ -2495,7 +2495,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     relay(self.leftController);
     relay(self.rightController);
     relay(self.topController);
-    relay(self.bottomController);
+    relay(self.bumController);
 }
 
 #pragma mark - Center View Hidden
@@ -2556,13 +2556,13 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
                 [self closeRightViewBouncing:nil];
             }
         }
-        if ((self.bottomController != nil) &&
+        if ((self.bumController != nil) &&
             (CGRectGetMinY(self.slidingControllerView.frame) < 0.f)) {
             if (self.centerhiddenInteractivity == IIViewDeckCenterHiddenInteractionTapToClose){
-                [self closeBottomView];
+                [self closeBumView];
             }
             else{
-                [self closeBottomViewBouncing:nil];
+                [self closeBumViewBouncing:nil];
             }
         }
         
@@ -2613,7 +2613,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     }
     else {
         minSide = IIViewDeckSideTop;
-        maxSide = IIViewDeckSideBottom;
+        maxSide = IIViewDeckSideBum;
         pv = self.slidingControllerView.frame.origin.y;
     }
     
@@ -2690,7 +2690,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     }
     else {
         minSide = IIViewDeckSideTop;
-        maxSide = IIViewDeckSideBottom;
+        maxSide = IIViewDeckSideBum;
         max = self.referenceBounds.size.height;
     }
     if (!_controllers[minSide]) ofs = MIN(0, ofs);
@@ -2749,7 +2749,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
         pv = self.slidingControllerView.frame.origin.y;
         m = self.referenceBounds.size.height;
         minSide = IIViewDeckSideTop;
-        maxSide = IIViewDeckSideBottom;
+        maxSide = IIViewDeckSideBum;
     }
     CGFloat v = [self locationOfPanner:panner
                            orientation:orientation];
@@ -3327,12 +3327,12 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     [self setController:topController forSide:IIViewDeckSideTop];
 }
 
-- (UIViewController *)bottomController {
-    return [self controllerForSide:IIViewDeckSideBottom];
+- (UIViewController *)bumController {
+    return [self controllerForSide:IIViewDeckSideBum];
 }
 
-- (void)setBottomController:(UIViewController *)bottomController {
-    [self setController:bottomController forSide:IIViewDeckSideBottom];
+- (void)setBumController:(UIViewController *)bumController {
+    [self setController:bumController forSide:IIViewDeckSideBum];
 }
 
 - (void)revealNewCenterController:(UIViewController *)newCenterController
@@ -3384,7 +3384,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     if ([centerController isEqual:self.leftController]) self.leftController = nil;
     if ([centerController isEqual:self.rightController]) self.rightController = nil;
     if ([centerController isEqual:self.topController]) self.topController = nil;
-    if ([centerController isEqual:self.bottomController]) self.bottomController = nil;
+    if ([centerController isEqual:self.bumController]) self.bumController = nil;
     
     if (_viewFirstAppeared) {
         if (shouldModifyHeirarchy) {
@@ -3417,7 +3417,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     self.title = _centerController.title;
     if (self.automaticallyUpdateTabBarItems) {
         [self addTabBarObserversForCenterController];
-        self.hidesBottomBarWhenPushed = _centerController.hidesBottomBarWhenPushed;
+        self.hidesBumBarWhenPushed = _centerController.hidesBumBarWhenPushed;
     }
     
     if (_viewFirstAppeared) {
@@ -3495,7 +3495,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     @try {
         [_centerController removeObserver:self forKeyPath:@"tabBarItem.title"];
         [_centerController removeObserver:self forKeyPath:@"tabBarItem.image"];
-        [_centerController removeObserver:self forKeyPath:@"hidesBottomBarWhenPushed"];
+        [_centerController removeObserver:self forKeyPath:@"hidesBumBarWhenPushed"];
     }
     @catch (NSException *exception) {}
 }
@@ -3503,7 +3503,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
 - (void)addTabBarObserversForCenterController {
     [_centerController addObserver:self forKeyPath:@"tabBarItem.title" options:0 context:nil];
     [_centerController addObserver:self forKeyPath:@"tabBarItem.image" options:0 context:nil];
-    [_centerController addObserver:self forKeyPath:@"hidesBottomBarWhenPushed" options:0 context:nil];
+    [_centerController addObserver:self forKeyPath:@"hidesBumBarWhenPushed" options:0 context:nil];
     self.tabBarItem.title = _centerController.tabBarItem.title;
     self.tabBarItem.image = _centerController.tabBarItem.image;
 }
@@ -3563,9 +3563,9 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
             return;
         }
         
-        if ([@"hidesBottomBarWhenPushed" isEqualToString:keyPath]) {
-            self.hidesBottomBarWhenPushed = _centerController.hidesBottomBarWhenPushed;
-            self.tabBarController.hidesBottomBarWhenPushed = _centerController.hidesBottomBarWhenPushed;
+        if ([@"hidesBumBarWhenPushed" isEqualToString:keyPath]) {
+            self.hidesBumBarWhenPushed = _centerController.hidesBumBarWhenPushed;
+            self.tabBarController.hidesBumBarWhenPushed = _centerController.hidesBumBarWhenPushed;
             return;
         }
     }
