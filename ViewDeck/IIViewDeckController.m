@@ -153,13 +153,14 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
 @property (nonatomic, readonly) CGRect referenceBounds;
 @property (nonatomic, readonly) CGRect centerViewBounds;
 @property (nonatomic, readonly) CGRect sideViewBounds;
-@property (nonatomic, strong) NSMutableArray* panners;
+@property (nonatomic, strong) NSMutableArray* panGestureRecognizers;
+@property (nonatomic, strong) NSMutableArray* tapGestureRecognizers;
 @property (nonatomic) CGFloat originalShadowRadius;
 @property (nonatomic) CGFloat originalShadowOpacity;
 @property (nonatomic, strong) UIColor* originalShadowColor;
 @property (nonatomic) CGSize originalShadowOffset;
 @property (nonatomic, strong) UIBezierPath* originalShadowPath;
-@property (nonatomic, strong) UIButton* centerTapper;
+@property (nonatomic, strong) UIView* centerTapperView;
 @property (nonatomic, strong) UIView* centerView;
 @property (nonatomic, weak, readonly) UIView* slidingControllerView;
 
@@ -185,8 +186,10 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
 - (void)centerViewHidden;
 - (void)centerTapped;
 
-- (void)addPanners;
-- (void)removePanners;
+- (void)addPanGestureRecognizers;
+- (void)addTapGestureRecognizers;
+- (void)removePanGestureRecognizers;
+- (void)removeTapGestureRecognizers;
 
 
 - (BOOL)checkCanOpenSide:(IIViewDeckSide)viewDeckSide;
@@ -314,7 +317,8 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     _navigationControllerBehavior = IIViewDeckNavigationControllerBehaviorContained;
     _centerhiddenInteractivity = IIViewDeckCenterHiddenInteractionFull;
     _sizeMode = IIViewDeckSizeModeLedge;
-    self.panners = [NSMutableArray array];
+    self.panGestureRecognizers = [NSMutableArray array];
+    self.tapGestureRecognizers = [NSMutableArray array];
     self.enabled = YES;
     _bounceDurationFactor = kIIViewDeckDefaultBounceDurationFactor;
     _openSlideAnimationDuration = kIIViewDeckDefaultOpenSlideAnimationDuration;
@@ -336,7 +340,9 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     _slidingController = nil;
     self.referenceView = nil;
     self.centerView = nil;
-    self.centerTapper = nil;
+    self.centerTapperView = nil;
+    self.tapGestureRecognizers = nil;
+    self.panGestureRecognizers = nil;
 }
 
 - (void)dealloc {
@@ -820,7 +826,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
             [self hideAppropriateSideViews];
         });
         
-        [self addPanners];
+        [self addPanGestureRecognizers];
         
         if ([self isSideClosed:IIViewDeckSideLeft] &&
             [self isSideClosed:IIViewDeckSideRight] &&
@@ -2495,49 +2501,36 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
 #pragma mark - Center View Hidden
 
 - (void)centerViewVisible {
-    [self removePanners];
-    if (self.centerTapper != nil) {
-        [self.centerTapper removeTarget:self
-                                 action:@selector(centerTapped)
-                       forControlEvents:UIControlEventTouchUpInside];
-        [self.centerTapper removeFromSuperview];
-    }
-    self.centerTapper = nil;
-    [self addPanners];
+    [self removePanGestureRecognizers];
+    [self removeTapGestureRecognizers];
+    
+    self.centerTapperView = nil;
+    
+    [self addPanGestureRecognizers];
     [self applyShadowToSlidingViewAnimated:YES];
 }
 
 - (void)centerViewHidden {
     if (IIViewDeckIsInteractiveWhenOpen(self.centerhiddenInteractivity)) {
-        [self removePanners];
-        if (self.centerTapper == nil) {
-            self.centerTapper = [UIButton buttonWithType:UIButtonTypeCustom];
-            [self.centerTapper setBackgroundImage:nil forState:UIControlStateNormal];
-            [self.centerTapper setBackgroundImage:nil forState:UIControlStateHighlighted];
-            [self.centerTapper setBackgroundImage:nil forState:UIControlStateDisabled];
-            self.centerTapper.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-            self.centerTapper.exclusiveTouch = NO;
-            [self.centerTapper addTarget:self action:@selector(centerTapped) forControlEvents:UIControlEventTouchUpInside];
-            self.centerTapper.backgroundColor = [UIColor clearColor];
-        }
-        [self.centerController.view addSubview:self.centerTapper];
-        self.centerTapper.accessibilityLabel = self.centerTapperAccessibilityLabel;
-        
-        CGRect tapperFrame = self.centerView.bounds;
-        
-        if ([self hasNavigationBar]) {
-            self.centerTapper.frame = CGRectMake(0.f,
-                                                 44.f,
-                                                 CGRectGetWidth(tapperFrame),
-                                                 CGRectGetHeight(tapperFrame));
-        }
-        else{
-            self.centerTapper.frame = tapperFrame;
+        [self removePanGestureRecognizers];
+        if (self.centerTapperView == nil) {
+            self.centerTapperView = [[UIView alloc] initWithFrame:self.centerController.view.bounds];
+            self.centerTapperView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+            self.centerTapperView.exclusiveTouch = NO;
+            
+            self.centerTapperView.backgroundColor = [UIColor clearColor];
         }
         
-        self.centerTapper.accessibilityLabel = self.centerTapperAccessibilityLabel;
+        [self.centerController.view addSubview:self.centerTapperView];
+        self.centerTapperView.accessibilityLabel = self.centerTapperAccessibilityLabel;
         
-        [self addPanners];
+        if([self hasNavigationBar]){
+            CGRect centerRect = self.centerTapperView.frame;
+            self.centerTapperView.frame = CGRectMake(0, 44.0, centerRect.size.width, centerRect.size.height-44.0);
+        }
+        
+        [self addPanGestureRecognizers];
+        [self addTapGestureRecognizers];
     }
     
     [self applyShadowToSlidingViewAnimated:YES];
@@ -2904,7 +2897,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
 }
 
 
-- (void)addPanner:(UIView*)view {
+- (void)addPanGestureRecognizerToView:(UIView*)view {
     if (view == nil){
         return;
     }
@@ -2913,12 +2906,22 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     panner.cancelsTouchesInView = YES;
     panner.delegate = self;
     [view addGestureRecognizer:panner];
-    [self.panners addObject:panner];
+    [self.panGestureRecognizers addObject:panner];
 }
 
+- (void)addTapGestureRecognizerToView:(UIView*)view {
+    if(view == nil){
+        return;
+    }
+    
+    UITapGestureRecognizer* tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(centerTapped)];
+    tap.cancelsTouchesInView = YES;
+    [view addGestureRecognizer:tap];
+    [self.tapGestureRecognizers addObject:tap];
+}
 
-- (void)addPanners {
-    [self removePanners];
+- (void)addPanGestureRecognizers {
+    [self removePanGestureRecognizers];
     
     switch (_panningMode) {
         case IIViewDeckPanningModeNone:
@@ -2927,39 +2930,69 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
         case IIViewDeckPanningModeFullView:
         case IIViewDeckPanningModeDelegate:
         case IIViewDeckPanningModeNavigationBarOrOpenCenter:
-            [self addPanner:self.slidingControllerView];
+            [self addPanGestureRecognizerToView:self.slidingControllerView];
             // also add to disabled center
-            if (self.centerTapper != nil){
-                [self addPanner:self.centerTapper];
+            if (self.centerTapperView != nil){
+                [self addPanGestureRecognizerToView:self.centerTapperView];
             }
             // also add to navigationbar if present
             if ((self.navigationController != nil) &&
                 (self.navigationController.navigationBarHidden == NO)) {
-                [self addPanner:self.navigationController.navigationBar];
+                [self addPanGestureRecognizerToView:self.navigationController.navigationBar];
             }
             break;
             
         case IIViewDeckPanningModeNavigationBar:
             if ((self.navigationController != nil) &&
                 (self.navigationController.navigationBarHidden == NO)) {
-                [self addPanner:self.navigationController.navigationBar];
+                [self addPanGestureRecognizerToView:self.navigationController.navigationBar];
             }
             
             if ((self.centerController.navigationController != nil) &&
                 (self.centerController.navigationController.navigationBarHidden == NO)) {
-                [self addPanner:self.centerController.navigationController.navigationBar];
+                [self addPanGestureRecognizerToView:self.centerController.navigationController.navigationBar];
             }
             
             if ([self.centerController isKindOfClass:[UINavigationController class]] &&
                 (((UINavigationController*)self.centerController).navigationBarHidden == NO)) {
-                [self addPanner:((UINavigationController*)self.centerController).navigationBar];
+                [self addPanGestureRecognizerToView:((UINavigationController*)self.centerController).navigationBar];
             }
             break;
             
         case IIViewDeckPanningModeView:
             if (self.panningView != nil) {
-                [self addPanner:self.panningView];
+                [self addPanGestureRecognizerToView:self.panningView];
             }
+            break;
+    }
+}
+
+- (void)addTapGestureRecognizers{
+    [self removeTapGestureRecognizers];
+    switch(_centerhiddenInteractivity){
+        case IIViewDeckCenterHiddenInteractionTapToClose:
+        case IIViewDeckCenterHiddenInteractionTapToCloseBouncing:
+            [self addTapGestureRecognizerToView:self.centerTapperView];
+            
+            if ((self.navigationController != nil) &&
+                (self.navigationController.navigationBarHidden == NO)) {
+                [self addTapGestureRecognizerToView:self.navigationController.navigationBar];
+            }
+            
+            if ((self.centerController.navigationController != nil) &&
+                (self.centerController.navigationController.navigationBarHidden == NO)) {
+                [self addTapGestureRecognizerToView:self.centerController.navigationController.navigationBar];
+            }
+            
+            if ([self.centerController isKindOfClass:[UINavigationController class]] &&
+                (((UINavigationController*)self.centerController).navigationBarHidden == NO)) {
+                [self addTapGestureRecognizerToView:((UINavigationController*)self.centerController).navigationBar];
+            }
+            
+            break;
+        case IIViewDeckCenterHiddenInteractionNone:
+        case IIViewDeckCenterHiddenInteractionFull:
+        default:
             break;
     }
 }
@@ -2983,11 +3016,18 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     return NO;
 }
 
-- (void)removePanners {
-    for (UIGestureRecognizer* panner in self.panners) {
+- (void)removePanGestureRecognizers {
+    for (UIGestureRecognizer* panner in self.panGestureRecognizers) {
         [panner.view removeGestureRecognizer:panner];
     }
-    [self.panners removeAllObjects];
+    [self.panGestureRecognizers removeAllObjects];
+}
+
+- (void)removeTapGestureRecognizers{
+    for(UIGestureRecognizer * tap in self.tapGestureRecognizers){
+        [tap.view removeGestureRecognizer:tap];
+    }
+    [self.tapGestureRecognizers removeAllObjects];
 }
 
 #pragma mark - Delegate convenience methods
@@ -3142,9 +3182,9 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
 
 - (void)setPanningMode:(IIViewDeckPanningMode)panningMode {
     if (_viewFirstAppeared) {
-        [self removePanners];
+        [self removePanGestureRecognizers];
         _panningMode = panningMode;
-        [self addPanners];
+        [self addPanGestureRecognizers];
     }
     else{
         _panningMode = panningMode;
@@ -3156,7 +3196,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
         _panningView = panningView;
         
         if (_viewFirstAppeared && _panningMode == IIViewDeckPanningModeView){
-            [self addPanners];
+            [self addPanGestureRecognizers];
         }
     }
 }
@@ -3310,7 +3350,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     [self prepareCenterForNewController:newCenterController shouldModifyViewHeirarchy:NO];
     [self.centerController viewWillDisappear:YES];
     [self restoreShadowToSlidingView];
-    [self removePanners];
+    [self removePanGestureRecognizers];
     
     //animate current center to side
     [UIView
@@ -3351,7 +3391,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
             [_centerController viewWillDisappear:NO];
         }
         [self restoreShadowToSlidingView];
-        [self removePanners];
+        [self removePanGestureRecognizers];
         
         if (shouldModifyHeirarchy) {
             [_centerController.view removeFromSuperview];
@@ -3410,7 +3450,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
             navController.navigationBarHidden = NO;
         }
         
-        [self addPanners];
+        [self addPanGestureRecognizers];
         [self applyShadowToSlidingViewAnimated:NO];
         
         if (modifyHeirarchy) {

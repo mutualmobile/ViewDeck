@@ -32,6 +32,8 @@
                                                                                    rightViewController:rightController];
     deckController.rightSize = 100;
     
+    deckController.centerhiddenInteractivity = IIViewDeckCenterHiddenInteractionTapToClose;
+    deckController.panningMode = IIViewDeckPanningModeNavigationBar;
     /* To adjust speed of open/close animations, set either of these two properties. */
     // deckController.openSlideAnimationDuration = 0.15f;
     // deckController.closeSlideAnimationDuration = 0.5f;
