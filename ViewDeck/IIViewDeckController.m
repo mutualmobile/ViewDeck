@@ -2504,7 +2504,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     [self removePanGestureRecognizers];
     [self removeTapGestureRecognizers];
     
-    self.centerTapperView = nil;
+    [self.centerTapperView removeFromSuperview];
     
     [self addPanGestureRecognizers];
     [self applyShadowToSlidingViewAnimated:YES];
@@ -2521,14 +2521,17 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
             self.centerTapperView.backgroundColor = [UIColor clearColor];
         }
         
-        [self.centerController.view addSubview:self.centerTapperView];
         self.centerTapperView.accessibilityLabel = self.centerTapperAccessibilityLabel;
         
-        if([self hasNavigationBar]){
-            CGRect centerRect = self.centerTapperView.frame;
-            self.centerTapperView.frame = CGRectMake(0, 44.0, centerRect.size.width, centerRect.size.height-44.0);
+        UINavigationController * centerNav = [self navigationControllerForCenterViewPositioning];
+        if(centerNav){
+            self.centerTapperView.frame = centerNav.visibleViewController.view.frame;
+            [centerNav.visibleViewController.view addSubview:self.centerTapperView];
+        }else {
+            self.centerTapperView.frame = self.centerController.view.bounds;
+            [self.centerController.view addSubview:self.centerTapperView];
         }
-        
+
         [self addPanGestureRecognizers];
         [self addTapGestureRecognizers];
     }
@@ -2997,23 +3000,29 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     }
 }
 
+//used so the centerTapView can determine how big it should be.
+-(UINavigationController*)navigationControllerForCenterViewPositioning{
+    if([super navigationController]!= nil){
+        return [super navigationController];
+    }
+    else if([self.centerController navigationController] != nil){
+        return  [self.centerController navigationController];
+    }
+    else if([self.centerController isKindOfClass:[UINavigationController class]]){
+        return (UINavigationController*)self.centerController;
+    }
+    return nil;
+}
+
 - (BOOL)hasNavigationBar{
-    if ((self.navigationController != nil) &&
-        (self.navigationController.navigationBarHidden == NO)) {
+    UINavigationController * nav = [self navigationController];
+    if(nav != nil &&
+       [nav isNavigationBarHidden] == NO){
         return YES;
     }
-    
-    if ((self.centerController.navigationController != nil) &&
-        (self.centerController.navigationController.navigationBarHidden == NO)) {
-        return YES;
+    else{
+        return NO;
     }
-    
-    if ([self.centerController isKindOfClass:[UINavigationController class]] &&
-        (((UINavigationController*)self.centerController).navigationBarHidden == NO)) {
-        return YES;
-    }
-    
-    return NO;
 }
 
 - (void)removePanGestureRecognizers {
