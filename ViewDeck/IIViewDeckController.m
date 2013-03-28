@@ -2523,7 +2523,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
         
         self.centerTapperView.accessibilityLabel = self.centerTapperAccessibilityLabel;
         
-        UINavigationController * centerNav = [self navigationControllerForCenterViewSizing];
+        UINavigationController * centerNav = [self navigationControllerForCenterViewPositioning];
         if(centerNav){
             self.centerTapperView.frame = centerNav.visibleViewController.view.frame;
             [centerNav.visibleViewController.view addSubview:self.centerTapperView];
@@ -3001,7 +3001,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
 }
 
 //used so the centerTapView can determine how big it should be.
--(UINavigationController*)navigationControllerForCenterViewSizing{
+-(UINavigationController*)navigationControllerForCenterViewPositioning{
     if([super navigationController]!= nil){
         return [super navigationController];
     }
@@ -3015,8 +3015,9 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
 }
 
 - (BOOL)hasNavigationBar{
-    if(self.navigationControllerForCenterViewSizing &&
-       self.navigationControllerForCenterViewSizing.navigationBarHidden == NO){
+    UINavigationController * nav = [self navigationController];
+    if(nav != nil &&
+       [nav isNavigationBarHidden] == NO){
         return YES;
     }
     else{
