@@ -349,6 +349,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     [self cleanup];
     
     self.centerController.viewDeckController = nil;
+    self.centerController = nil;
     self.leftController.viewDeckController = nil;
     self.leftController = nil;
     self.rightController.viewDeckController = nil;
