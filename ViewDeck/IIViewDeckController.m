@@ -2934,15 +2934,30 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
         case IIViewDeckPanningModeFullView:
         case IIViewDeckPanningModeDelegate:
         case IIViewDeckPanningModeNavigationBarOrOpenCenter:
-            [self addPanGestureRecognizerToView:self.slidingControllerView];
-            // also add to disabled center
-            if (self.centerTapperView != nil){
-                [self addPanGestureRecognizerToView:self.centerTapperView];
+
+            // also add to center
+            if([self isAnySideOpen]){
+                if (self.centerTapperView != nil){
+                    [self addPanGestureRecognizerToView:self.centerTapperView];
+                }
+                else {
+                    [self addPanGestureRecognizerToView:self.slidingControllerView];
+                }
             }
             // also add to navigationbar if present
             if ((self.navigationController != nil) &&
                 (self.navigationController.navigationBarHidden == NO)) {
                 [self addPanGestureRecognizerToView:self.navigationController.navigationBar];
+            }
+            
+            if ((self.centerController.navigationController != nil) &&
+                (self.centerController.navigationController.navigationBarHidden == NO)) {
+                [self addPanGestureRecognizerToView:self.centerController.navigationController.navigationBar];
+            }
+            
+            if ([self.centerController isKindOfClass:[UINavigationController class]] &&
+                (((UINavigationController*)self.centerController).navigationBarHidden == NO)) {
+                [self addPanGestureRecognizerToView:((UINavigationController*)self.centerController).navigationBar];
             }
             break;
             
