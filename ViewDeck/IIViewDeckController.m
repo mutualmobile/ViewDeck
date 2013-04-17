@@ -73,6 +73,7 @@ __typeof__(h) __h = (h);                                    \
 #import <QuartzCore/QuartzCore.h>
 #import <objc/message.h>
 #import "IIWrapController.h"
+#import "IIViewDeckBezelGestureRecognizer.h"
 
 typedef NS_ENUM(NSInteger, IIViewDeckViewState){
     IIViewDeckViewStateHidden = 0,
@@ -2504,10 +2505,11 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
 - (void)centerViewVisible {
     [self removePanGestureRecognizers];
     [self removeTapGestureRecognizers];
-    
+
     [self.centerTapperView removeFromSuperview];
-    
+
     [self addPanGestureRecognizers];
+    [self addBezelGestureRecognizerToView:self.centerController.view];
     [self applyShadowToSlidingViewAnimated:YES];
 }
 
@@ -2900,17 +2902,31 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     [self notifyDidOpenSide:openSide animated:NO];
 }
 
-
-- (void)addPanGestureRecognizerToView:(UIView*)view {
+- (void)addPanGestureRecognizerToView:(UIView *)view {
     if (view == nil){
         return;
     }
+
+    UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panned:)];
+    pan.delegate = self;
+
+    [view addGestureRecognizer:pan];
+    [self.panGestureRecognizers addObject:pan];
+
+    [self addBezelGestureRecognizerToView:view];
+}
+
+- (void)addBezelGestureRecognizerToView:(UIView *)view {
+    if (view == nil){
+        return;
+    }
+
+    UIPanGestureRecognizer *pan = [[IIViewDeckBezelGestureRecognizer alloc] initWithTarget:self action:@selector(panned:)];
+    pan.delegate = self;
+
+    [view addGestureRecognizer:pan];
+    [self.panGestureRecognizers addObject:pan];
     
-    UIPanGestureRecognizer* panner = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panned:)];
-    panner.cancelsTouchesInView = YES;
-    panner.delegate = self;
-    [view addGestureRecognizer:panner];
-    [self.panGestureRecognizers addObject:panner];
 }
 
 - (void)addTapGestureRecognizerToView:(UIView*)view {

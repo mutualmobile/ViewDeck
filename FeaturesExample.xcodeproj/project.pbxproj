@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5C403A64171F28E5008244C7 /* IIViewDeckBezelGestureRecognizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 5C403A63171F28E5008244C7 /* IIViewDeckBezelGestureRecognizer.m */; };
 		E22E07F114BBA1AB00B002B7 /* RootViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E22E07EF14BBA1AB00B002B7 /* RootViewController.m */; };
 		E22E07F214BBA1AC00B002B7 /* RootViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = E22E07F014BBA1AB00B002B7 /* RootViewController.xib */; };
 		E2955F7014B728E4003DDB4E /* IIViewDeckController.m in Sources */ = {isa = PBXBuildFile; fileRef = E2955F6D14B728E4003DDB4E /* IIViewDeckController.m */; };
@@ -32,6 +33,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		5C403A62171F28E5008244C7 /* IIViewDeckBezelGestureRecognizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IIViewDeckBezelGestureRecognizer.h; sourceTree = "<group>"; };
+		5C403A63171F28E5008244C7 /* IIViewDeckBezelGestureRecognizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IIViewDeckBezelGestureRecognizer.m; sourceTree = "<group>"; };
 		E0C300BE161A4E9D0097213B /* IIWrapController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IIWrapController.h; sourceTree = "<group>"; };
 		E0C300BF161A4E9D0097213B /* IIWrapController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = IIWrapController.m; sourceTree = "<group>"; };
 		E22E07EE14BBA1AB00B002B7 /* RootViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RootViewController.h; sourceTree = "<group>"; };
@@ -92,6 +95,8 @@
 				E0C300BF161A4E9D0097213B /* IIWrapController.m */,
 				E2955F6C14B728E4003DDB4E /* IIViewDeckController.h */,
 				E2955F6D14B728E4003DDB4E /* IIViewDeckController.m */,
+				5C403A62171F28E5008244C7 /* IIViewDeckBezelGestureRecognizer.h */,
+				5C403A63171F28E5008244C7 /* IIViewDeckBezelGestureRecognizer.m */,
 			);
 			path = ViewDeck;
 			sourceTree = SOURCE_ROOT;
@@ -262,6 +267,7 @@
 				E2955F8A14B7D14F003DDB4E /* SimpleController.m in Sources */,
 				E2955F8F14B7D15E003DDB4E /* WebController.m in Sources */,
 				E22E07F114BBA1AB00B002B7 /* RootViewController.m in Sources */,
+				5C403A64171F28E5008244C7 /* IIViewDeckBezelGestureRecognizer.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
