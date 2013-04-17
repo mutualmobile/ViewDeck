@@ -2509,7 +2509,6 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     [self.centerTapperView removeFromSuperview];
 
     [self addPanGestureRecognizers];
-    [self addBezelGestureRecognizerToView:self.centerController.view];
     [self applyShadowToSlidingViewAnimated:YES];
 }
 
@@ -2908,12 +2907,9 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
     }
 
     UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panned:)];
-    pan.delegate = self;
-
+    [pan setDelegate:self];
     [view addGestureRecognizer:pan];
     [self.panGestureRecognizers addObject:pan];
-
-    [self addBezelGestureRecognizerToView:view];
 }
 
 - (void)addBezelGestureRecognizerToView:(UIView *)view {
@@ -2921,21 +2917,18 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
         return;
     }
 
-    UIPanGestureRecognizer *pan = [[IIViewDeckBezelGestureRecognizer alloc] initWithTarget:self action:@selector(panned:)];
-    pan.delegate = self;
-
-    [view addGestureRecognizer:pan];
-    [self.panGestureRecognizers addObject:pan];
-    
+    IIViewDeckBezelGestureRecognizer *bezelPan = [[IIViewDeckBezelGestureRecognizer alloc] initWithTarget:self action:@selector(panned:)];
+    [bezelPan setDelegate:self];
+    [view addGestureRecognizer:bezelPan];
+    [self.panGestureRecognizers addObject:bezelPan];
 }
 
-- (void)addTapGestureRecognizerToView:(UIView*)view {
+- (void)addTapGestureRecognizerToView:(UIView *)view {
     if(view == nil){
         return;
     }
-    
+
     UITapGestureRecognizer* tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(centerTapped)];
-    tap.cancelsTouchesInView = YES;
     [view addGestureRecognizer:tap];
     [self.tapGestureRecognizers addObject:tap];
 }
@@ -2975,6 +2968,11 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
                 (((UINavigationController*)self.centerController).navigationBarHidden == NO)) {
                 [self addPanGestureRecognizerToView:((UINavigationController*)self.centerController).navigationBar];
             }
+
+            if (_panningMode == IIViewDeckPanningModeNavigationBarOrBezelClosedCenter) {
+                [self addBezelGestureRecognizerToView:self.centerController.view];
+            }
+            
             break;
             
         case IIViewDeckPanningModeNavigationBar:

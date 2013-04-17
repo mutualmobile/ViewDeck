@@ -48,7 +48,8 @@ typedef NS_ENUM(NSInteger, IIViewDeckPanningMode) {
     IIViewDeckPanningModeNavigationBar,   // panning only occurs when you start touching in the navigation bar (when the center controller is a UINavigationController with a visible navigation bar). Otherwise it will behave as IIViewDeckPanningModeNone. 
     IIViewDeckPanningModeView,      // panning only occurs when you start touching in a UIView set in panningView property
     IIViewDeckPanningModeDelegate,         // allows panning with a delegate
-    IIViewDeckPanningModeNavigationBarOrOpenCenter      //panning occurs when you start touching the navigation bar if the center controller is visible.  If the left or right controller is open, pannning occurs anywhere on the center controller, not just the navbar.
+    IIViewDeckPanningModeNavigationBarOrOpenCenter,      //panning occurs when you start touching the navigation bar if the center controller is visible.  If the left or right controller is open, pannning occurs anywhere on the center controller, not just the navbar.
+    IIViewDeckPanningModeNavigationBarOrBezelClosedCenter //panning occurs when you start touching the navigation bar if the center controller is visible.  If the left or right controller is open, pannning occurs anywhere on the center controller, not just the navbar. Also adds a bezel gesture to pan.
 };
 
 typedef NS_ENUM(NSInteger, IIViewDeckCenterHiddenInteraction) {
