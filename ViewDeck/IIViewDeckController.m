@@ -2917,7 +2917,27 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
         return;
     }
 
-    IIViewDeckBezelGestureRecognizer *bezelPan = [[IIViewDeckBezelGestureRecognizer alloc] initWithTarget:self action:@selector(panned:)];
+    IIViewDeckBezelPosition position = -1;
+
+    if (self.leftController && self.rightController) {
+        position = IIViewDeckBezelPositionLeftAndRight;
+    } else {
+        if (self.leftController) {
+            position = IIViewDeckBezelPositionLeft;
+        } else if (self.rightController) {
+            position = IIViewDeckBezelPositionRight;
+        }
+    }
+
+    if (position == -1) {
+        return;
+    }
+
+    IIViewDeckBezelGestureRecognizer *bezelPan;
+    bezelPan = [[IIViewDeckBezelGestureRecognizer alloc] initWithTarget:self
+                                                                 action:@selector(panned:)
+                                                       withViewDeckSide:position];
+
     [bezelPan setDelegate:self];
     [view addGestureRecognizer:bezelPan];
     [self.panGestureRecognizers addObject:bezelPan];
@@ -2943,6 +2963,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
         case IIViewDeckPanningModeFullView:
         case IIViewDeckPanningModeDelegate:
         case IIViewDeckPanningModeNavigationBarOrOpenCenter:
+        case IIViewDeckPanningModeNavigationBarOrBezelClosedCenter:
 
             // also add to center
             if([self isAnySideOpen]){

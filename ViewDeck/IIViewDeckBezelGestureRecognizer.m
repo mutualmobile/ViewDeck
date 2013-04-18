@@ -27,7 +27,28 @@
 
 #import "IIViewDeckBezelGestureRecognizer.h"
 
+@interface IIViewDeckBezelGestureRecognizer ()
+
+@property (nonatomic, assign) IIViewDeckBezelPosition bezelPosition;
+
+@end
+
+#define BEZEL_GRACE_AREA 20
+
 @implementation IIViewDeckBezelGestureRecognizer
+
+- (instancetype)initWithTarget:(id)target
+                        action:(SEL)action
+              withViewDeckSide:(IIViewDeckBezelPosition)bezelPosition;
+{
+    self = [super initWithTarget:target action:action];
+
+    if (self) {
+        [self setBezelPosition:bezelPosition];
+    }
+
+    return self;
+}
 
 - (void)touchesBegan:(NSSet *)touches
            withEvent:(UIEvent *)event
@@ -36,8 +57,20 @@
 
     CGPoint touchedPoint = [[touches anyObject] locationInView:self.view];
 
-    if (touchedPoint.x > 20) {
-        [self setState:UIGestureRecognizerStateFailed];
+    if (self.bezelPosition == IIViewDeckBezelPositionLeftAndRight) {
+        if (touchedPoint.x > 20 && touchedPoint.x < self.view.bounds.size.width - BEZEL_GRACE_AREA) {
+            [self setState:UIGestureRecognizerStateFailed];
+        }
+    } else {
+        if (self.bezelPosition == IIViewDeckBezelPositionRight) {
+            if (touchedPoint.x < self.view.bounds.size.width - BEZEL_GRACE_AREA) {
+                [self setState:UIGestureRecognizerStateFailed];
+            }
+        } else if (self.bezelPosition == IIViewDeckBezelPositionLeft) {
+            if (touchedPoint.x > 20) {
+                [self setState:UIGestureRecognizerStateFailed];
+            }
+        }
     }
 }
 

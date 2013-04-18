@@ -25,6 +25,16 @@
 
 #import <UIKit/UIKit.h>
 
+typedef NS_ENUM(NSInteger, IIViewDeckBezelPosition) {
+    IIViewDeckBezelPositionLeft,
+    IIViewDeckBezelPositionRight,
+    IIViewDeckBezelPositionLeftAndRight
+};
+
 @interface IIViewDeckBezelGestureRecognizer : UIPanGestureRecognizer
+
+- (instancetype)initWithTarget:(id)target
+                        action:(SEL)action
+              withViewDeckSide:(IIViewDeckBezelPosition)bezelPosition;
 
 @end
