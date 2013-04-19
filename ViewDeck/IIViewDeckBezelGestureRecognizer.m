@@ -33,7 +33,7 @@
 
 @end
 
-#define BEZEL_GRACE_AREA 20
+CGFloat const kBezelGraceArea = 20.0f;
 
 @implementation IIViewDeckBezelGestureRecognizer
 
@@ -58,12 +58,12 @@
     CGPoint touchedPoint = [[touches anyObject] locationInView:self.view];
 
     if (self.bezelPosition == IIViewDeckBezelPositionLeftAndRight) {
-        if (touchedPoint.x > 20 && touchedPoint.x < self.view.bounds.size.width - BEZEL_GRACE_AREA) {
+        if (touchedPoint.x > 20 && touchedPoint.x < self.view.bounds.size.width - kBezelGraceArea) {
             [self setState:UIGestureRecognizerStateFailed];
         }
     } else {
         if (self.bezelPosition == IIViewDeckBezelPositionRight) {
-            if (touchedPoint.x < self.view.bounds.size.width - BEZEL_GRACE_AREA) {
+            if (touchedPoint.x < self.view.bounds.size.width - kBezelGraceArea) {
                 [self setState:UIGestureRecognizerStateFailed];
             }
         } else if (self.bezelPosition == IIViewDeckBezelPositionLeft) {
