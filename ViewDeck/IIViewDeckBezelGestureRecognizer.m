@@ -58,7 +58,7 @@ CGFloat const kBezelGraceArea = 20.0f;
     CGPoint touchedPoint = [[touches anyObject] locationInView:self.view];
 
     if (self.bezelPosition == IIViewDeckBezelPositionLeftAndRight) {
-        if (touchedPoint.x > 20 && touchedPoint.x < self.view.bounds.size.width - kBezelGraceArea) {
+        if (touchedPoint.x > kBezelGraceArea && touchedPoint.x < self.view.bounds.size.width - kBezelGraceArea) {
             [self setState:UIGestureRecognizerStateFailed];
         }
     } else {
@@ -67,7 +67,7 @@ CGFloat const kBezelGraceArea = 20.0f;
                 [self setState:UIGestureRecognizerStateFailed];
             }
         } else if (self.bezelPosition == IIViewDeckBezelPositionLeft) {
-            if (touchedPoint.x > 20) {
+            if (touchedPoint.x > kBezelGraceArea) {
                 [self setState:UIGestureRecognizerStateFailed];
             }
         }
