@@ -2963,7 +2963,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
         case IIViewDeckPanningModeFullView:
         case IIViewDeckPanningModeDelegate:
         case IIViewDeckPanningModeNavigationBarOrOpenCenter:
-        case IIViewDeckPanningModeNavigationBarOrBezelClosedCenter:
+        case IIViewDeckPanningModeNavigationBarOrOpenCenterOrBezelClosedCenter:
 
             // also add to center
             if([self isAnySideOpen]){
@@ -2990,7 +2990,7 @@ static inline NSTimeInterval durationToAnimate(CGFloat pointsToAnimate, CGFloat 
                 [self addPanGestureRecognizerToView:((UINavigationController*)self.centerController).navigationBar];
             }
 
-            if (_panningMode == IIViewDeckPanningModeNavigationBarOrBezelClosedCenter) {
+            if (_panningMode == IIViewDeckPanningModeNavigationBarOrOpenCenterOrBezelClosedCenter) {
                 [self addBezelGestureRecognizerToView:self.centerController.view];
             }
             
