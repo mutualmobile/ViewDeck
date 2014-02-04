@@ -32,7 +32,7 @@ typedef NS_ENUM(NSInteger, IIViewDeckSide) {
     IIViewDeckSideLeft,
     IIViewDeckSideRight,
     IIViewDeckSideTop,
-    IIViewDeckSideBottom,
+    IIViewDeckSideBum,
     IIViewDeckSideCenter
 };
 
@@ -102,7 +102,7 @@ typedef void (^IIViewDeckControllerBounceBlock) (IIViewDeckController *controlle
 @property (nonatomic, strong) UIViewController* leftController;
 @property (nonatomic, strong) UIViewController* rightController;
 @property (nonatomic, strong) UIViewController* topController;
-@property (nonatomic, strong) UIViewController* bottomController;
+@property (nonatomic, strong) UIViewController* bumController;
 @property (nonatomic, copy) NSString *centerTapperAccessibilityLabel;
 @property (nonatomic, readonly, weak) UIViewController* slidingController;
 
@@ -120,9 +120,9 @@ typedef void (^IIViewDeckControllerBounceBlock) (IIViewDeckController *controlle
 @property (nonatomic) CGFloat topSize;
 @property (nonatomic, readonly) CGFloat topViewSize;
 @property (nonatomic, readonly) CGFloat topLedgeSize;
-@property (nonatomic) CGFloat bottomSize;
-@property (nonatomic, readonly) CGFloat bottomViewSize;
-@property (nonatomic, readonly) CGFloat bottomLedgeSize;
+@property (nonatomic) CGFloat bumSize;
+@property (nonatomic, readonly) CGFloat bumViewSize;
+@property (nonatomic, readonly) CGFloat bumLedgeSize;
 @property (nonatomic) CGFloat maxSize;
 @property (nonatomic) BOOL resizesCenterView;
 @property (nonatomic) IIViewDeckPanningMode panningMode;
@@ -140,14 +140,14 @@ typedef void (^IIViewDeckControllerBounceBlock) (IIViewDeckController *controlle
 - (id)initWithCenterViewController:(UIViewController*)centerController rightViewController:(UIViewController*)rightController;
 - (id)initWithCenterViewController:(UIViewController*)centerController leftViewController:(UIViewController*)leftController rightViewController:(UIViewController*)rightController;
 - (id)initWithCenterViewController:(UIViewController*)centerController topViewController:(UIViewController*)topController;
-- (id)initWithCenterViewController:(UIViewController*)centerController bottomViewController:(UIViewController*)bottomController;
-- (id)initWithCenterViewController:(UIViewController*)centerController topViewController:(UIViewController*)topController bottomViewController:(UIViewController*)bottomController;
-- (id)initWithCenterViewController:(UIViewController*)centerController leftViewController:(UIViewController*)leftController rightViewController:(UIViewController*)rightController topViewController:(UIViewController*)topController bottomViewController:(UIViewController*)bottomController;
+- (id)initWithCenterViewController:(UIViewController*)centerController bumViewController:(UIViewController*)bumController;
+- (id)initWithCenterViewController:(UIViewController*)centerController topViewController:(UIViewController*)topController bumViewController:(UIViewController*)bumController;
+- (id)initWithCenterViewController:(UIViewController*)centerController leftViewController:(UIViewController*)leftController rightViewController:(UIViewController*)rightController topViewController:(UIViewController*)topController bumViewController:(UIViewController*)bumController;
 
 - (void)setLeftSize:(CGFloat)leftSize completion:(void(^)(BOOL finished))completion;
 - (void)setRightSize:(CGFloat)rightSize completion:(void(^)(BOOL finished))completion;
 - (void)setTopSize:(CGFloat)leftSize completion:(void(^)(BOOL finished))completion;
-- (void)setBottomSize:(CGFloat)rightSize completion:(void(^)(BOOL finished))completion;
+- (void)setBumSize:(CGFloat)rightSize completion:(void(^)(BOOL finished))completion;
 - (void)setMaxSize:(CGFloat)maxSize completion:(void(^)(BOOL finished))completion;
 
 - (BOOL)toggleLeftView;
@@ -195,20 +195,20 @@ typedef void (^IIViewDeckControllerBounceBlock) (IIViewDeckController *controlle
 - (BOOL)closeTopViewBouncing:(IIViewDeckControllerBounceBlock)bounced;
 - (BOOL)closeTopViewBouncing:(IIViewDeckControllerBounceBlock)bounced completion:(IIViewDeckControllerBlock)completed;
 
-- (BOOL)toggleBottomView;
-- (BOOL)openBottomView;
-- (BOOL)closeBottomView;
-- (BOOL)toggleBottomViewAnimated:(BOOL)animated;
-- (BOOL)toggleBottomViewAnimated:(BOOL)animated completion:(IIViewDeckControllerBlock)completed;
-- (BOOL)openBottomViewAnimated:(BOOL)animated;
-- (BOOL)openBottomViewAnimated:(BOOL)animated completion:(IIViewDeckControllerBlock)completed;
-- (BOOL)openBottomViewBouncing:(IIViewDeckControllerBounceBlock)bounced;
-- (BOOL)openBottomViewBouncing:(IIViewDeckControllerBounceBlock)bounced completion:(IIViewDeckControllerBlock)completed;
-- (BOOL)closeBottomViewAnimated:(BOOL)animated;
-- (BOOL)closeBottomViewAnimated:(BOOL)animated completion:(IIViewDeckControllerBlock)completed;
-- (BOOL)closeBottomViewAnimated:(BOOL)animated duration:(NSTimeInterval)duration completion:(IIViewDeckControllerBlock)completed;
-- (BOOL)closeBottomViewBouncing:(IIViewDeckControllerBounceBlock)bounced;
-- (BOOL)closeBottomViewBouncing:(IIViewDeckControllerBounceBlock)bounced completion:(IIViewDeckControllerBlock)completed;
+- (BOOL)toggleBumView;
+- (BOOL)openBumView;
+- (BOOL)closeBumView;
+- (BOOL)toggleBumViewAnimated:(BOOL)animated;
+- (BOOL)toggleBumViewAnimated:(BOOL)animated completion:(IIViewDeckControllerBlock)completed;
+- (BOOL)openBumViewAnimated:(BOOL)animated;
+- (BOOL)openBumViewAnimated:(BOOL)animated completion:(IIViewDeckControllerBlock)completed;
+- (BOOL)openBumViewBouncing:(IIViewDeckControllerBounceBlock)bounced;
+- (BOOL)openBumViewBouncing:(IIViewDeckControllerBounceBlock)bounced completion:(IIViewDeckControllerBlock)completed;
+- (BOOL)closeBumViewAnimated:(BOOL)animated;
+- (BOOL)closeBumViewAnimated:(BOOL)animated completion:(IIViewDeckControllerBlock)completed;
+- (BOOL)closeBumViewAnimated:(BOOL)animated duration:(NSTimeInterval)duration completion:(IIViewDeckControllerBlock)completed;
+- (BOOL)closeBumViewBouncing:(IIViewDeckControllerBounceBlock)bounced;
+- (BOOL)closeBumViewBouncing:(IIViewDeckControllerBounceBlock)bounced completion:(IIViewDeckControllerBlock)completed;
 
 - (BOOL)toggleOpenView;
 - (BOOL)toggleOpenViewAnimated:(BOOL)animated;
